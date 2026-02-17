@@ -3,10 +3,13 @@
 document.addEventListener('DOMContentLoaded', () => {
   const dimSlider = document.getElementById('dimSlider');
   const blurSlider = document.getElementById('blurSlider');
+  const tipDurationSlider = document.getElementById('tipDurationSlider');
   const dimVal = document.getElementById('dimVal');
   const blurVal = document.getElementById('blurVal');
+  const tipDurationVal = document.getElementById('tipDurationVal');
   const saveImageToggle = document.getElementById('saveImageToggle');
   const autoCopyToggle = document.getElementById('autoCopyToggle');
+  const showCaptureDetailsToggle = document.getElementById('showCaptureDetailsToggle');
   const captureBtn = document.getElementById('captureBtn');
   const colorSwatches = document.querySelectorAll('.color-swatch');
   const toast = document.getElementById('saved-toast');
@@ -19,7 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     blurIntensity: 0,
     saveImage: false,
     autoCopy: true,
-    accentColor: '#7C3AED'
+    accentColor: '#7C3AED',
+    tipDuration: 4,
+    showCaptureDetails: false
   }, (settings) => {
     dimSlider.value = settings.dimIntensity;
     dimVal.textContent = settings.dimIntensity + '%';
@@ -29,33 +34,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveImageToggle.checked = settings.saveImage;
     autoCopyToggle.checked = settings.autoCopy;
+    showCaptureDetailsToggle.checked = settings.showCaptureDetails;
+
+    tipDurationSlider.value = settings.tipDuration;
+    tipDurationVal.textContent = settings.tipDuration + 's';
 
     currentAccent = settings.accentColor;
     updateActiveSwatch(currentAccent);
+    applyAccentColor(currentAccent);
   });
 
   // Capture button
   captureBtn.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'ACTIVATE_CAPTURE' }, (response) => {
-          if (chrome.runtime.lastError) {
-            // Inject content script if not loaded
-            chrome.scripting.executeScript({
-              target: { tabId: tabs[0].id },
-              files: ['content.js']
-            });
-            chrome.scripting.insertCSS({
-              target: { tabId: tabs[0].id },
-              files: ['content.css']
-            });
-            setTimeout(() => {
-              chrome.tabs.sendMessage(tabs[0].id, { action: 'ACTIVATE_CAPTURE' });
-            }, 300);
-          }
-        });
-        window.close(); // Close popup
+      if (!tabs[0]) return;
+      const url = tabs[0].url || '';
+      if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
+        url.startsWith('edge://') || url.startsWith('about:') ||
+        url.startsWith('devtools://') || url === '') {
+        showToast('Cannot capture on this page');
+        return;
       }
+      chrome.tabs.sendMessage(tabs[0].id, { action: 'ACTIVATE_CAPTURE' }, (response) => {
+        if (chrome.runtime.lastError) {
+          chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            files: ['content.js']
+          }).catch(() => { });
+          chrome.scripting.insertCSS({
+            target: { tabId: tabs[0].id },
+            files: ['content.css']
+          }).catch(() => { });
+          setTimeout(() => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: 'ACTIVATE_CAPTURE' });
+          }, 300);
+        }
+      });
+      window.close();
     });
   });
 
@@ -74,6 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Toggles
   saveImageToggle.addEventListener('change', saveSettings);
   autoCopyToggle.addEventListener('change', saveSettings);
+  showCaptureDetailsToggle.addEventListener('change', saveSettings);
+
+  // Tip Duration slider
+  tipDurationSlider.addEventListener('input', () => {
+    tipDurationVal.textContent = tipDurationSlider.value + 's';
+    saveSettings();
+  });
 
   // Color swatches
   colorSwatches.forEach(swatch => {
@@ -88,6 +110,44 @@ document.addEventListener('DOMContentLoaded', () => {
     colorSwatches.forEach(s => {
       s.classList.toggle('active', s.dataset.color === color);
     });
+    applyAccentColor(color);
+  }
+
+  // Convert hex to HSL, generate lighter + border variants, update CSS vars
+  function applyAccentColor(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    h = Math.round(h * 360);
+    s = Math.round(s * 100);
+    l = Math.round(l * 100);
+
+    const root = document.documentElement;
+    root.style.setProperty('--accent', hex);
+    root.style.setProperty('--accent-l', `hsl(${h}, ${Math.min(s + 15, 100)}%, ${Math.min(l + 25, 90)}%)`);
+    root.style.setProperty('--border', `hsla(${h}, ${s}%, ${l}%, 0.25)`);
+
+    // Update capture button gradient
+    const btn = document.querySelector('.capture-btn');
+    if (btn) {
+      const darkerL = Math.max(l - 10, 10);
+      btn.style.background = `linear-gradient(135deg, ${hex}, hsl(${h}, ${s}%, ${darkerL}%))`;
+      btn.style.boxShadow = `0 4px 18px hsla(${h}, ${s}%, ${l}%, 0.35)`;
+    }
+
+    // Update toast bg
+    const toastEl = document.getElementById('saved-toast');
+    if (toastEl) toastEl.style.background = hex;
   }
 
   function saveSettings() {
@@ -96,15 +156,18 @@ document.addEventListener('DOMContentLoaded', () => {
       blurIntensity: parseInt(blurSlider.value),
       saveImage: saveImageToggle.checked,
       autoCopy: autoCopyToggle.checked,
-      accentColor: currentAccent
+      showCaptureDetails: showCaptureDetailsToggle.checked,
+      accentColor: currentAccent,
+      tipDuration: parseInt(tipDurationSlider.value)
     }, () => {
       showToast();
     });
   }
 
   let toastTimeout;
-  function showToast() {
+  function showToast(msg) {
     clearTimeout(toastTimeout);
+    toast.textContent = msg || '✓ Settings saved';
     toast.classList.add('show');
     toastTimeout = setTimeout(() => toast.classList.remove('show'), 1800);
   }

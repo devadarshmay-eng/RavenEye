@@ -22,11 +22,11 @@
 
 #raveneye-selection {
   position: absolute;
-  border: 2px solid #7C3AED;
+  border: 1px solid #7C3AED;
   background: transparent;
   box-shadow:
-    0 0 0 9999px rgba(0,0,0,var(--raven-dim, 0.5)),
-    inset 0 0 0 1px rgba(255,255,255,0.2),
+    0 0 0 9999px rgba(0, 0, 0, var(--raven-dim, 0.5)),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
     0 0 20px rgba(124, 58, 237, 0.4);
   pointer-events: none;
   display: none;
@@ -43,17 +43,33 @@
 /* Corner handles */
 .raven-corner {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   background: #fff;
-  border: 2px solid #7C3AED;
+  border: 1px solid #7C3AED;
   border-radius: 2px;
   pointer-events: none;
 }
-.raven-corner.tl { top: -5px; left: -5px; }
-.raven-corner.tr { top: -5px; right: -5px; }
-.raven-corner.bl { bottom: -5px; left: -5px; }
-.raven-corner.br { bottom: -5px; right: -5px; }
+
+.raven-corner.tl {
+  top: -4px;
+  left: -4px;
+}
+
+.raven-corner.tr {
+  top: -4px;
+  right: -4px;
+}
+
+.raven-corner.bl {
+  bottom: -4px;
+  left: -4px;
+}
+
+.raven-corner.br {
+  bottom: -4px;
+  right: -4px;
+}
 
 /* Dimension label */
 #raveneye-dims {
@@ -78,7 +94,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(15, 10, 30, 0.92);
+  background: rgba(15, 10, 30, 0.5);
   border: 1px solid rgba(124, 58, 237, 0.6);
   border-radius: 12px;
   padding: 20px 28px;
@@ -86,7 +102,7 @@
   pointer-events: none;
   transition: opacity 0.3s ease;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 60px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 60px rgba(124, 58, 237, 0.15);
 }
 
 #raveneye-tip .raven-logo {
@@ -101,7 +117,7 @@
 
 #raveneye-tip p {
   margin: 0;
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.75);
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
   line-height: 1.6;
@@ -126,7 +142,7 @@
   background: #0F0A1E;
   border: 1px solid rgba(124, 58, 237, 0.5);
   border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 80px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 80px rgba(124, 58, 237, 0.1);
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   animation: ravenSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -134,8 +150,15 @@
 }
 
 @keyframes ravenSlideIn {
-  from { opacity: 0; transform: translateY(12px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 #raveneye-result .raven-result-header {
@@ -159,16 +182,17 @@
   width: 22px;
   height: 22px;
   border: none;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 50%;
   cursor: pointer;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s, color 0.2s;
 }
+
 #raveneye-result .raven-close:hover {
   background: rgba(239, 68, 68, 0.25);
   color: #ef4444;
@@ -183,6 +207,7 @@
   justify-content: center;
   background: #080512;
 }
+
 #raveneye-result .raven-preview img {
   max-width: 100%;
   max-height: 100%;
@@ -197,18 +222,18 @@
 #raveneye-result .raven-ocr-label {
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255, 255, 255, 0.35);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 6px;
 }
 
 #raveneye-result .raven-ocr-text {
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: 8px;
   padding: 8px 10px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   line-height: 1.5;
   min-height: 50px;
@@ -220,7 +245,7 @@
 
 #raveneye-result .raven-ocr-text:empty::before {
   content: 'Extracting text...';
-  color: rgba(255,255,255,0.25);
+  color: rgba(255, 255, 255, 0.25);
   font-style: italic;
 }
 
@@ -228,7 +253,7 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(124,58,237,0.3);
+  border: 2px solid rgba(124, 58, 237, 0.3);
   border-top-color: #7C3AED;
   border-radius: 50%;
   animation: ravenSpin 0.7s linear infinite;
@@ -237,7 +262,9 @@
 }
 
 @keyframes ravenSpin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 #raveneye-result .raven-actions {
@@ -262,18 +289,20 @@
   background: #7C3AED;
   color: white;
 }
+
 #raveneye-result .raven-btn-primary:hover {
   background: #6D28D9;
   box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
 }
 
 #raveneye-result .raven-btn-secondary {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.7);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
+
 #raveneye-result .raven-btn-secondary:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   color: white;
 }
 
@@ -287,10 +316,52 @@
 #raveneye-result .raven-ocr-text::-webkit-scrollbar {
   width: 4px;
 }
+
 #raveneye-result .raven-ocr-text::-webkit-scrollbar-track {
   background: transparent;
 }
+
 #raveneye-result .raven-ocr-text::-webkit-scrollbar-thumb {
   background: rgba(124, 58, 237, 0.4);
   border-radius: 4px;
+}
+
+/* Toast notifications */
+.raveneye-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(15, 10, 30, 0.92);
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 10px;
+  z-index: 2147483647;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 58, 237, 0.1);
+  white-space: nowrap;
+}
+
+.raveneye-toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.raveneye-toast-success {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.raveneye-toast-error {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.raveneye-toast-processing {
+  border-color: rgba(124, 58, 237, 0.5);
 }

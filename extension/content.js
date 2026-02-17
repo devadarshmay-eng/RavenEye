@@ -2,7 +2,19 @@
 // Core selection, capture, and OCR logic
 
 (function () {
-  if (window.__ravenEyeLoaded) return;
+  // Check if we're a stale/orphaned content script after extension reload
+  if (window.__ravenEyeLoaded) {
+    try {
+      if (chrome.runtime && chrome.runtime.id) return;
+    } catch (e) { }
+    window.__ravenEyeLoaded = false;
+    const oldOverlay = document.getElementById('raveneye-overlay');
+    if (oldOverlay) oldOverlay.remove();
+    const oldResult = document.getElementById('raveneye-result');
+    if (oldResult) oldResult.remove();
+    const oldToast = document.getElementById('raveneye-toast');
+    if (oldToast) oldToast.remove();
+  }
   window.__ravenEyeLoaded = true;
 
   let isActive = false;
@@ -10,6 +22,7 @@
   let isDragging = false;
   let overlay, backdrop, selectionBox, dimLabel, tip, resultPopup;
   let settings = {};
+  let tipHideTimeout = null;
 
   // Load settings
   function loadSettings() {
@@ -19,7 +32,9 @@
         blurIntensity: 0,
         saveImage: false,
         theme: 'dark',
-        accentColor: '#7C3AED'
+        accentColor: '#7C3AED',
+        tipDuration: 4,
+        showCaptureDetails: false
       }, (s) => {
         settings = s;
         resolve(s);
@@ -43,39 +58,32 @@
   }
 
   function buildOverlay() {
-    // Remove any existing overlay
     removeOverlay();
 
     const dimValue = settings.dimIntensity / 100;
     const blurValue = settings.blurIntensity;
 
-    // Main overlay container
     overlay = document.createElement('div');
     overlay.id = 'raveneye-overlay';
     overlay.style.setProperty('--raven-dim', dimValue);
     overlay.style.setProperty('--raven-blur', blurValue + 'px');
 
-    // Backdrop (the darkened screen)
     backdrop = document.createElement('div');
     backdrop.id = 'raveneye-backdrop';
 
-    // Selection rectangle
     selectionBox = document.createElement('div');
     selectionBox.id = 'raveneye-selection';
 
-    // Corner handles
     ['tl', 'tr', 'bl', 'br'].forEach(pos => {
       const corner = document.createElement('div');
       corner.className = `raven-corner ${pos}`;
       selectionBox.appendChild(corner);
     });
 
-    // Dimension label
     dimLabel = document.createElement('div');
     dimLabel.id = 'raveneye-dims';
     selectionBox.appendChild(dimLabel);
 
-    // Instruction tooltip
     tip = document.createElement('div');
     tip.id = 'raveneye-tip';
     tip.innerHTML = `
@@ -91,14 +99,22 @@
     overlay.appendChild(tip);
     document.body.appendChild(overlay);
 
-    // Animate in
     overlay.style.opacity = '0';
     requestAnimationFrame(() => {
       overlay.style.transition = 'opacity 0.2s ease';
       overlay.style.opacity = '1';
     });
 
-    // Event listeners
+    // Auto-hide tip
+    if (settings.tipDuration > 0) {
+      tipHideTimeout = setTimeout(() => {
+        if (tip) {
+          tip.style.transition = 'opacity 0.5s ease';
+          tip.style.opacity = '0';
+        }
+      }, settings.tipDuration * 1000);
+    }
+
     overlay.addEventListener('mousedown', onMouseDown);
     overlay.addEventListener('mousemove', onMouseMove);
     overlay.addEventListener('mouseup', onMouseUp);
@@ -129,13 +145,11 @@
 
     const rect = getSelectionRect();
     if (rect.width < 10 || rect.height < 10) {
-      // Too small, reset
       selectionBox.style.display = 'none';
       if (tip) tip.style.opacity = '1';
       return;
     }
 
-    // Capture!
     captureRegion(rect);
   }
 
@@ -164,10 +178,7 @@
   }
 
   async function captureRegion(rect) {
-    // Remove overlay before screenshot
     removeOverlay(false);
-
-    // Small delay to let overlay disappear
     await sleep(80);
 
     chrome.runtime.sendMessage(
@@ -175,17 +186,23 @@
       async (response) => {
         if (!response || !response.success) {
           console.error('RavenEye: capture failed', response?.error);
+          showToast('Capture failed', 'error');
+          deactivate();
           return;
         }
 
-        // Crop the full screenshot to selected region
         const croppedDataUrl = await cropImage(response.dataUrl, rect);
 
-        // Show result popup
-        showResultPopup(croppedDataUrl, rect);
+        // Show detailed popup only if user enabled it in settings
+        if (settings.showCaptureDetails) {
+          showResultPopup(croppedDataUrl, rect);
+        }
 
-        // Run OCR
+        // Run OCR and auto-copy
         runOCR(croppedDataUrl);
+
+        // Deactivate capture mode
+        isActive = false;
       }
     );
   }
@@ -216,7 +233,6 @@
     resultPopup = document.createElement('div');
     resultPopup.id = 'raveneye-result';
 
-    // Position popup near selection but within viewport
     let popX = rect.x + rect.width + 12;
     let popY = rect.y;
     if (popX + 370 > window.innerWidth) popX = rect.x - 372;
@@ -250,7 +266,6 @@
 
     document.body.appendChild(resultPopup);
 
-    // Bind actions
     document.getElementById('raven-close-btn').onclick = () => {
       resultPopup.remove();
       resultPopup = null;
@@ -279,37 +294,52 @@
     }
   }
 
+  // --- OCR via background API call ---
   async function runOCR(dataUrl) {
+    // Show processing toast
+    showToast('Extracting text...', 'processing');
+
     try {
-      // Use Tesseract.js loaded via CDN
-      if (typeof Tesseract === 'undefined') {
-        await loadTesseract();
+      const result = await Promise.race([
+        new Promise((resolve, reject) => {
+          chrome.runtime.sendMessage(
+            { action: 'RUN_OCR', dataUrl: dataUrl },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+                return;
+              }
+              resolve(response);
+            }
+          );
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('OCR timed out')), 30000)
+        )
+      ]);
+
+      if (result && result.success && result.text) {
+        // Auto-copy text
+        copyTextToClipboard(result.text);
+        showToast('✓ Text copied to clipboard', 'success');
+
+        // Update detailed popup if shown
+        const textEl = document.getElementById('raven-ocr-text');
+        const label = document.querySelector('.raven-ocr-label');
+        if (textEl) textEl.textContent = result.text;
+        if (label) label.innerHTML = 'Extracted Text';
+      } else {
+        showToast('No text found in selection', 'info');
+
+        const textEl = document.getElementById('raven-ocr-text');
+        const label = document.querySelector('.raven-ocr-label');
+        if (textEl) textEl.textContent = '(No text found in selection)';
+        if (label) label.innerHTML = 'Extracted Text';
       }
-
-      const result = await Tesseract.recognize(dataUrl, 'eng', {
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            const pct = Math.round(m.progress * 100);
-            const label = document.querySelector('.raven-ocr-label');
-            if (label) label.innerHTML = `<span class="raven-spinner"></span>Recognizing... ${pct}%`;
-          }
-        }
-      });
-
-      const text = result.data.text.trim();
-      const textEl = document.getElementById('raven-ocr-text');
-      const label = document.querySelector('.raven-ocr-label');
-
-      if (textEl) textEl.textContent = text || '(No text found in selection)';
-      if (label) label.innerHTML = 'Extracted Text';
-
-      // Auto-copy text if found
-      if (text) {
-        copyTextToClipboard(text);
-      }
-
     } catch (err) {
       console.error('RavenEye OCR error:', err);
+      showToast('OCR failed', 'error');
+
       const textEl = document.getElementById('raven-ocr-text');
       const label = document.querySelector('.raven-ocr-label');
       if (textEl) textEl.textContent = 'OCR failed. Try a clearer selection.';
@@ -317,19 +347,34 @@
     }
   }
 
-  function loadTesseract() {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
+  // --- Toast notification ---
+  function showToast(message, type = 'info') {
+    // Remove existing toast
+    const existing = document.getElementById('raveneye-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'raveneye-toast';
+    toast.className = `raveneye-toast raveneye-toast-${type}`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      toast.classList.add('raveneye-toast-show');
     });
+
+    // Auto-remove after duration (longer for processing)
+    const duration = type === 'processing' ? 15000 : 3000;
+    setTimeout(() => {
+      toast.classList.remove('raveneye-toast-show');
+      setTimeout(() => toast.remove(), 400);
+    }, duration);
   }
 
   function copyTextToClipboard(text) {
     navigator.clipboard.writeText(text).catch(() => {
-      // Fallback
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -366,6 +411,10 @@
   }
 
   function removeOverlay(full = true) {
+    if (tipHideTimeout) {
+      clearTimeout(tipHideTimeout);
+      tipHideTimeout = null;
+    }
     if (overlay) {
       overlay.removeEventListener('mousedown', onMouseDown);
       overlay.removeEventListener('mousemove', onMouseMove);
