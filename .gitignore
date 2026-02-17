@@ -1,0 +1,30 @@
+# RavenEye .gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Node (if you add build tools later)
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Build outputs
+dist/
+*.zip
+*.crx
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# IDE
+.vscode/
+.idea/
+*.sublime-workspace

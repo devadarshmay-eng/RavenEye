@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RavenEye</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg:       #080512;
+    --surface:  #110d20;
+    --border:   rgba(124,58,237,0.25);
+    --accent:   #7C3AED;
+    --accent-l: #a78bfa;
+    --text:     rgba(255,255,255,0.85);
+    --muted:    rgba(255,255,255,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 320px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0d0720 0%, #150d30 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), #4F46E5);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(124,58,237,0.4);
+  }
+
+  .logo-text {
+    flex: 1;
+  }
+  .logo-text h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.08em;
+    line-height: 1;
+  }
+  .logo-text p {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .version-badge {
+    font-size: 9px;
+    background: rgba(124,58,237,0.2);
+    border: 1px solid rgba(124,58,237,0.35);
+    color: var(--accent-l);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* Capture Button */
+  .capture-btn {
+    margin: 16px 18px 12px;
+    width: calc(100% - 36px);
+    padding: 11px;
+    background: linear-gradient(135deg, #7C3AED, #4F46E5);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 18px rgba(124,58,237,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .capture-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(124,58,237,0.5);
+  }
+  .capture-btn:active {
+    transform: translateY(0);
+  }
+
+  .shortcut-hint {
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    letter-spacing: 0.04em;
+  }
+  .shortcut-hint kbd {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 18px;
+  }
+
+  /* Settings Section */
+  .settings {
+    padding: 14px 18px;
+  }
+
+  .section-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 12px;
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .setting-label {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .setting-label .icon { font-size: 14px; }
+  .setting-sub {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+  }
+
+  /* Slider */
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .slider-val {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-l);
+    width: 28px;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 90px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(124,58,237,0.25);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(124,58,237,0.5);
+    transition: box-shadow 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover {
+    box-shadow: 0 2px 10px rgba(124,58,237,0.7);
+  }
+
+  /* Toggle Switch */
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .toggle-track::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 14px;
+    height: 14px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  input:checked + .toggle-track {
+    background: rgba(124,58,237,0.5);
+    border-color: rgba(124,58,237,0.6);
+  }
+  input:checked + .toggle-track::before {
+    transform: translateX(16px);
+    background: var(--accent-l);
+  }
+
+  /* Color accent picker */
+  .color-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.active { border-color: white; }
+
+  /* Footer */
+  .footer {
+    padding: 10px 18px 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-link {
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+  .footer-link:hover { color: var(--accent-l); }
+  .footer-made {
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 0.04em;
+  }
+
+  /* Saved toast */
+  #saved-toast {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    background: #10b981;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #saved-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-mark">🦅</div>
+  <div class="logo-text">
+    <h1>RavenEye</h1>
+    <p>Screen Text Extractor</p>
+  </div>
+  <span class="version-badge">v1.0</span>
+</div>
+
+<button class="capture-btn" id="captureBtn">
+  <span>✦</span> Activate Capture
+</button>
+<div class="shortcut-hint">or use <kbd>Ctrl+Shift+E</kbd></div>
+
+<div class="divider"></div>
+
+<div class="settings">
+  <div class="section-label">⚙ Settings</div>
+
+  <!-- Dim Intensity -->
+  <div class="setting-row">
+    <div class="setting-label">
+      <span class="icon">🌑</span>
+      <span>Dim Intensity</span>
+    </div>
+    <div class="slider-wrap">
+      <input type="range" id="dimSlider" min="0" max="90" value="50"/>
+      <span class="slider-val" id="dimVal">50%</span>
+    </div>
+  </div>
+
+  <!-- Blur Intensity -->
+  <div class="setting-row">
+    <div class="setting-label">
+      <span class="icon">💠</span>
+      <span>Blur Effect</span>
+    </div>
+    <div class="slider-wrap">
+      <input type="range" id="blurSlider" min="0" max="20" value="0"/>
+      <span class="slider-val" id="blurVal">0px</span>
+    </div>
+  </div>
+
+  <!-- Save Image toggle -->
+  <div class="setting-row">
+    <div class="setting-label">
+      <span class="icon">💾</span>
+      <div>
+        <span>Save Image</span>
+        <span class="setting-sub">Download captured region</span>
+      </div>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="saveImageToggle"/>
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <!-- Auto-copy -->
+  <div class="setting-row">
+    <div class="setting-label">
+      <span class="icon">📋</span>
+      <div>
+        <span>Auto-copy Text</span>
+        <span class="setting-sub">Copy to clipboard after capture</span>
+      </div>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="autoCopyToggle" checked/>
+      <span class="toggle-track"></span>
+    </label>
+  </div>
+
+  <!-- Accent Color -->
+  <div class="setting-row" style="align-items: flex-start; flex-direction: column; gap: 8px;">
+    <div class="setting-label">
+      <span class="icon">🎨</span>
+      <span>Accent Color</span>
+    </div>
+    <div class="color-row" id="colorRow">
+      <div class="color-swatch active" data-color="#7C3AED" style="background:#7C3AED"></div>
+      <div class="color-swatch" data-color="#2563EB" style="background:#2563EB"></div>
+      <div class="color-swatch" data-color="#0891B2" style="background:#0891B2"></div>
+      <div class="color-swatch" data-color="#059669" style="background:#059669"></div>
+      <div class="color-swatch" data-color="#DC2626" style="background:#DC2626"></div>
+      <div class="color-swatch" data-color="#D97706" style="background:#D97706"></div>
+      <div class="color-swatch" data-color="#DB2777" style="background:#DB2777"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <a class="footer-link" href="https://github.com/yourusername/raveneye" target="_blank">GitHub ↗</a>
+  <span class="footer-made">Made with 🦅 RavenEye</span>
+</div>
+
+<div id="saved-toast">✓ Settings saved</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

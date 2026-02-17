@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RavenEye — Complete Build & Deploy Workflow</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  --bg: #07050f;
+  --surface: #0e0a1e;
+  --surface2: #160f2d;
+  --border: rgba(124,58,237,0.2);
+  --accent: #7C3AED;
+  --accent-glow: rgba(124,58,237,0.35);
+  --accent-l: #a78bfa;
+  --text: #e2deff;
+  --muted: rgba(226,222,255,0.45);
+  --code-bg: #0d0920;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* Animated background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 20% 10%, rgba(124,58,237,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 800px at 80% 80%, rgba(79,70,229,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero */
+.hero {
+  padding: 72px 0 48px;
+  text-align: center;
+  position: relative;
+}
+.hero-eye {
+  font-size: 52px;
+  margin-bottom: 16px;
+  display: block;
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.hero h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #c4b5fd 0%, #7c3aed 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.15;
+}
+.hero-sub {
+  margin-top: 12px;
+  font-size: 17px;
+  color: var(--muted);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: var(--accent-l);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Phase divider */
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 48px 0;
+}
+
+/* Phase headers */
+.phase {
+  margin-bottom: 48px;
+}
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.phase-num {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent), #4F46E5);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+.phase-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #c4b5fd;
+  letter-spacing: 0.05em;
+}
+.phase-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Steps */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.step:hover {
+  border-color: rgba(124,58,237,0.45);
+  box-shadow: 0 4px 24px rgba(124,58,237,0.08);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(124,58,237,0.04);
+  border-bottom: 1px solid var(--border);
+}
+.step-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.step-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  flex: 1;
+}
+.step-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.tag-action { background: rgba(124,58,237,0.2); color: var(--accent-l); }
+.tag-cli    { background: rgba(59,130,246,0.2); color: #93c5fd; }
+.tag-web    { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+.tag-once   { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+.step-body {
+  padding: 16px 18px;
+}
+.step-body p {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+.step-body p:last-child { margin-bottom: 0; }
+.step-body p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Code blocks */
+pre {
+  background: var(--code-bg);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 10px 0;
+  overflow-x: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  position: relative;
+}
+pre code {
+  color: #c4b5fd;
+}
+.code-comment { color: rgba(124,58,237,0.5); }
+.code-cmd { color: #a78bfa; }
+.code-str { color: #6ee7b7; }
+.code-kw  { color: #93c5fd; }
+
+/* Inline code */
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+  color: var(--accent-l);
+}
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Tip boxes */
+.tip {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+.tip-info  { background: rgba(59,130,246,0.08);  border: 1px solid rgba(59,130,246,0.2);  color: #93c5fd; }
+.tip-warn  { background: rgba(245,158,11,0.08);  border: 1px solid rgba(245,158,11,0.2);  color: #fcd34d; }
+.tip-done  { background: rgba(16,185,129,0.08);  border: 1px solid rgba(16,185,129,0.2);  color: #6ee7b7; }
+.tip-icon  { font-size: 15px; flex-shrink: 0; line-height: 1.4; }
+
+/* File tree */
+.file-tree {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+.ft-dir  { color: var(--accent-l); }
+.ft-file { color: rgba(226,222,255,0.7); }
+.ft-note { color: var(--muted); }
+
+/* Checklist */
+.checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.check-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(124,58,237,0.4);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.check-box:hover, .check-box.done {
+  background: rgba(124,58,237,0.2);
+  border-color: var(--accent-l);
+}
+.check-box.done::after {
+  content: '✓';
+  position: absolute;
+  top: -2px; left: 2px;
+  font-size: 12px;
+  color: var(--accent-l);
+}
+
+/* Progress */
+.progress-bar-wrap {
+  background: rgba(124,58,237,0.12);
+  border-radius: 6px;
+  height: 6px;
+  margin: 6px 0 2px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #818cf8);
+  border-radius: 6px;
+  width: 0%;
+  transition: width 0.5s ease;
+}
+.progress-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 28px;
+  margin-top: 12px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent), transparent);
+}
+.tl-item {
+  position: relative;
+  margin-bottom: 18px;
+}
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -23px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.tl-title {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.tl-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* URL pill */
+.url-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  color: #93c5fd;
+  text-decoration: none;
+  transition: background 0.2s;
+  margin: 4px 2px;
+}
+.url-pill:hover {
+  background: rgba(59,130,246,0.2);
+}
+
+/* Summary table */
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 10px;
+}
+.summary-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.summary-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(124,58,237,0.08);
+  color: var(--muted);
+  vertical-align: top;
+}
+.summary-table td:first-child {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 12.5px;
+}
+.summary-table tr:last-child td { border-bottom: none; }
+.summary-table tr:hover td { background: rgba(124,58,237,0.04); }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  border-top: 1px solid var(--border);
+  margin-top: 48px;
+}
+.footer strong { color: var(--accent-l); }
+
+/* Interactive checkbox JS */
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="hero-eye">🦅</span>
+    <h1>RavenEye</h1>
+    <p class="hero-sub">Complete Build & Deploy Workflow — From Zero to Chrome Web Store</p>
+    <span class="hero-badge">✦ Planning → Building → GitHub → Publishing</span>
+  </div>
+
+  <!-- PHASE 0: Project Structure -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">00</div>
+      <div>
+        <div class="phase-title">Project Structure</div>
+        <div class="phase-desc">What you have after cloning this repo</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-header">
+        <span class="step-icon">📁</span>
+        <span class="step-name">File Layout</span>
+        <span class="step-tag tag-once">Reference</span>
+      </div>
+      <div class="step-body">
+        <div class="file-tree">
+<span class="ft-dir">RavenEye/</span>
+├── <span class="ft-dir">extension/</span>               <span class="ft-note"># ← load THIS in Chrome</span>
+│   ├── <span class="ft-file">manifest.json</span>        <span class="ft-note"># Extension config (MV3)</span>
+│   ├── <span class="ft-file">background.js</span>        <span class="ft-note"># Service worker</span>
+│   ├── <span class="ft-file">content.js</span>           <span class="ft-note"># Overlay + OCR logic</span>
+│   ├── <span class="ft-file">content.css</span>          <span class="ft-note"># Selection UI</span>
+│   ├── <span class="ft-file">popup.html</span>           <span class="ft-note"># Settings popup</span>
+│   ├── <span class="ft-file">popup.js</span>             <span class="ft-note"># Settings logic</span>
+│   └── <span class="ft-dir">icons/</span>               <span class="ft-note"># 16/32/48/128px PNGs</span>
+├── <span class="ft-dir">.github/workflows/</span>
+│   └── <span class="ft-file">release.yml</span>         <span class="ft-note"># Auto-zip on git tag</span>
+├── <span class="ft-file">README.md</span>
+├── <span class="ft-file">.gitignore</span>
+└── <span class="ft-file">LICENSE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- PHASE 1: PLANNING -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">01</div>
+      <div>
+        <div class="phase-title">Planning</div>
+        <div class="phase-desc">Understand what you're building before writing a line of code</div>
+      </div>
+    </div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🧠</span>
+          <span class="step-name">Core Architecture Decisions</span>
+          <span class="step-tag tag-once">Design</span>
+        </div>
+        <div class="step-body">
+          <table class="summary-table">
+            <thead><tr><th>Decision</th><th>Choice</th><th>Reason</th></tr></thead>
+            <tbody>
+              <tr><td>Manifest version</td><td>MV3</td><td>Chrome requires MV3 for new extensions (MV2 deprecated)</td></tr>
+              <tr><td>OCR engine</td><td>Tesseract.js v5</td><td>Runs 100% in browser, no API keys, no server cost</td></tr>
+              <tr><td>Screenshot API</td><td>captureVisibleTab</td><td>Built into Chrome Extensions — captures the whole tab</td></tr>
+              <tr><td>Storage</td><td>chrome.storage.sync</td><td>Settings sync across devices automatically</td></tr>
+              <tr><td>UI stack</td><td>Vanilla JS/CSS</td><td>No build tools needed for v1, fast to ship</td></tr>
+            </tbody>
+          </table>
+          <div class="tip tip-info" style="margin-top:12px;">
+            <span class="tip-icon">💡</span>
+            <span><strong>Key insight:</strong> The extension captures a full screenshot, then crops it to your selection rectangle in a Canvas element. The cropped image is then sent to Tesseract.js for OCR — all locally.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🔄</span>
+          <span class="step-name">User Flow</span>
+          <span class="step-tag tag-once">Design</span>
+        </div>
+        <div class="step-body">
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-title">User presses Ctrl+Shift+E (or clicks icon)</div>
+              <div class="tl-desc">Background script fires → sends message to content script</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-title">Screen dims + crosshair cursor</div>
+              <div class="tl-desc">Overlay injected into page with configurable dim intensity</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-title">User drags selection rectangle</div>
+              <div class="tl-desc">mousedown → mousemove → mouseup tracked on the overlay</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-title">Overlay removed → screenshot taken</div>
+              <div class="tl-desc">80ms delay so the overlay doesn't appear in the capture</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-title">Region cropped via Canvas API</div>
+              <div class="tl-desc">Full screenshot is cropped to exact selection rect × devicePixelRatio</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-title">OCR runs in browser via Tesseract.js</div>
+              <div class="tl-desc">Tesseract loaded from CDN, processes the cropped image locally</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-title">Result popup appears with extracted text</div>
+              <div class="tl-desc">User can copy text, save image, or dismiss</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- PHASE 2: LOCAL SETUP -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">02</div>
+      <div>
+        <div class="phase-title">Local Development Setup</div>
+        <div class="phase-desc">Get the extension running in your browser</div>
+      </div>
+    </div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">📥</span>
+          <span class="step-name">Get the Code</span>
+          <span class="step-tag tag-cli">Terminal</span>
+        </div>
+        <div class="step-body">
+          <p>Download the project files from GitHub once you've pushed them (Step 3), or work from the folder directly:</p>
+          <pre><code><span class="code-comment"># Clone after pushing to GitHub</span>
+<span class="code-cmd">git clone</span> https://github.com/<span class="code-str">YOUR_USERNAME</span>/raveneye.git
+<span class="code-cmd">cd</span> raveneye</code></pre>
+          <div class="tip tip-done">
+            <span class="tip-icon">✓</span>
+            <span>All the extension files are already built and ready in the <code>extension/</code> folder — no build step required for v1.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🧩</span>
+          <span class="step-name">Load in Chrome (Developer Mode)</span>
+          <span class="step-tag tag-web">Browser</span>
+        </div>
+        <div class="step-body">
+          <ul class="checklist" id="chrome-checklist">
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Open Chrome and navigate to <code>chrome://extensions/</code></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Toggle <strong>"Developer mode"</strong> ON (top-right corner)</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Click <strong>"Load unpacked"</strong></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Navigate to and select the <code>extension/</code> folder</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> 🦅 RavenEye icon appears in your toolbar!</li>
+          </ul>
+          <div class="tip tip-warn">
+            <span class="tip-icon">⚠️</span>
+            <span>If you modify any files, click the <strong>↻ reload</strong> button on the extension card at <code>chrome://extensions/</code> to see changes.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🧪</span>
+          <span class="step-name">Testing Checklist</span>
+          <span class="step-tag tag-action">Test</span>
+        </div>
+        <div class="step-body">
+          <ul class="checklist">
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Press <code>Ctrl+Shift+E</code> on any page — screen should dim</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Drag a selection over text — rectangle appears</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Release — result popup appears with "Extracting text..."</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> OCR completes — text appears in popup</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> "Copy Text" copies to clipboard</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> <code>ESC</code> key cancels the selection</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Popup icon → settings → change dim slider → test again</li>
+          </ul>
+          <div class="tip tip-warn">
+            <span class="tip-icon">⚠️</span>
+            <span><strong>OCR Note:</strong> Tesseract.js loads from CDN on first use (~3MB). This takes a few seconds initially but is cached after that. Best results on dark-on-light text, size 12pt+.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- PHASE 3: GITHUB -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">03</div>
+      <div>
+        <div class="phase-title">GitHub — Version Control & Releases</div>
+        <div class="phase-desc">Push your code and set up automated releases</div>
+      </div>
+    </div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🐙</span>
+          <span class="step-name">Create the GitHub Repository</span>
+          <span class="step-tag tag-web">GitHub.com</span>
+        </div>
+        <div class="step-body">
+          <ul class="checklist">
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Go to <a class="url-pill" href="https://github.com/new" target="_blank">↗ github.com/new</a></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Repository name: <code>raveneye</code></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Description: <em>"🦅 Browser extension that extracts text from screen selections using OCR"</em></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Set to <strong>Public</strong> (required for Chrome Web Store review transparency)</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Do <strong>NOT</strong> initialize with README (you already have one)</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Click <strong>Create repository</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">📤</span>
+          <span class="step-name">Push Your Code</span>
+          <span class="step-tag tag-cli">Terminal</span>
+        </div>
+        <div class="step-body">
+          <pre><code><span class="code-comment"># Inside your RavenEye project folder</span>
+<span class="code-cmd">git init</span>
+<span class="code-cmd">git add</span> .
+<span class="code-cmd">git commit</span> -m <span class="code-str">"🦅 Initial commit — RavenEye v1.0.0"</span>
+<span class="code-cmd">git branch</span> -M main
+<span class="code-cmd">git remote add</span> origin https://github.com/<span class="code-str">YOUR_USERNAME</span>/raveneye.git
+<span class="code-cmd">git push</span> -u origin main</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🏷️</span>
+          <span class="step-name">Create a Release (Auto-packages ZIP)</span>
+          <span class="step-tag tag-cli">Terminal</span>
+        </div>
+        <div class="step-body">
+          <p>The <code>.github/workflows/release.yml</code> GitHub Actions workflow automatically creates a <strong>packaged .zip</strong> of your extension whenever you push a version tag:</p>
+          <pre><code><span class="code-comment"># Tag v1.0.0 → triggers GitHub Actions → creates release with .zip</span>
+<span class="code-cmd">git tag</span> v1.0.0
+<span class="code-cmd">git push</span> origin v1.0.0</code></pre>
+          <p>Go to your repo → <strong>Actions</strong> tab to watch it run. Then <strong>Releases</strong> → you'll see <code>raveneye-v1.0.0.zip</code> ready to download.</p>
+          <div class="tip tip-done">
+            <span class="tip-icon">✓</span>
+            <span>This ZIP is exactly what you upload to the Chrome Web Store. It packages only the <code>extension/</code> folder contents.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- PHASE 4: CHROME WEB STORE -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">04</div>
+      <div>
+        <div class="phase-title">Chrome Web Store — Publishing</div>
+        <div class="phase-desc">Get RavenEye live for everyone to install</div>
+      </div>
+    </div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">💳</span>
+          <span class="step-name">Developer Registration (One-Time)</span>
+          <span class="step-tag tag-once">One-Time</span>
+        </div>
+        <div class="step-body">
+          <ul class="checklist">
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Go to <a class="url-pill" href="https://chrome.google.com/webstore/devconsole" target="_blank">↗ Chrome Developer Dashboard</a></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Sign in with a Google account</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Pay the <strong>one-time $5 USD</strong> developer registration fee</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Wait for account verification (usually instant)</li>
+          </ul>
+          <div class="tip tip-info">
+            <span class="tip-icon">💡</span>
+            <span>The $5 fee is a one-time payment per Google account. After that, publishing unlimited extensions is free.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🎨</span>
+          <span class="step-name">Prepare Store Assets</span>
+          <span class="step-tag tag-action">Required</span>
+        </div>
+        <div class="step-body">
+          <table class="summary-table">
+            <thead><tr><th>Asset</th><th>Size</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Extension icon</td><td>128×128px</td><td>Already done ✓ (in <code>icons/icon128.png</code>)</td></tr>
+              <tr><td>Store tile (small)</td><td>440×280px</td><td>Main listing image — shows RavenEye in action</td></tr>
+              <tr><td>Screenshot 1</td><td>1280×800 or 640×400</td><td>Show the selection overlay on a real webpage</td></tr>
+              <tr><td>Screenshot 2</td><td>1280×800 or 640×400</td><td>Show the result popup with extracted text</td></tr>
+              <tr><td>Screenshot 3</td><td>1280×800 or 640×400</td><td>Show the settings popup</td></tr>
+              <tr><td>Promo tile (optional)</td><td>1400×560px</td><td>Shown on featured pages — add if you want</td></tr>
+            </tbody>
+          </table>
+          <div class="tip tip-warn">
+            <span class="tip-icon">⚠️</span>
+            <span>Google reviewers look at screenshots carefully. Make sure they show the extension in use on a real browser window with actual websites visible. Don't use blank/solid backgrounds.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">📝</span>
+          <span class="step-name">Store Listing Content</span>
+          <span class="step-tag tag-action">Required</span>
+        </div>
+        <div class="step-body">
+          <p><strong>Name:</strong> <code>RavenEye — Screen Text Extractor</code></p>
+          <p style="margin-top:8px;"><strong>Short Description (132 chars max):</strong></p>
+          <pre><code>Select any region on screen and instantly extract the text inside. Powered by local OCR — no data ever leaves your browser.</code></pre>
+          <p><strong>Detailed Description:</strong></p>
+          <pre><code>🦅 RavenEye — See everything. Capture anything.
+
+RavenEye lets you draw a selection rectangle on any part of your
+screen and extracts all text from that region instantly, using
+OCR that runs entirely inside your browser.
+
+HOW IT WORKS:
+→ Press Ctrl+Shift+E (or click the icon)
+→ Screen dims — ready to select
+→ Drag a rectangle over any text
+→ Text is extracted and copied to clipboard
+
+FEATURES:
+✓ Local OCR (Tesseract.js) — no API, no server, no cost
+✓ Works on images, PDFs, videos, websites — anything visible
+✓ Configurable dim & blur intensity
+✓ Optional: save captured region as PNG
+✓ 7 accent color themes
+✓ Keyboard shortcut support
+✓ 100% private — zero data leaves your device
+
+PERFECT FOR:
+• Copying text from images you can't select
+• Extracting text from YouTube subtitles
+• Capturing text from PDFs with broken copy
+• Grabbing text from screenshots
+• Reading text from any visual element</code></pre>
+          <p><strong>Category:</strong> <code>Productivity</code></p>
+          <p><strong>Language:</strong> <code>English</code></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🚀</span>
+          <span class="step-name">Upload & Submit for Review</span>
+          <span class="step-tag tag-web">Dashboard</span>
+        </div>
+        <div class="step-body">
+          <ul class="checklist">
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> In the Developer Dashboard, click <strong>"New item"</strong></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Upload <code>raveneye-v1.0.0.zip</code> (from your GitHub Release)</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Fill in name, description, and store listing content (see above)</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Upload all required screenshots and the store tile</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Set visibility to <strong>Public</strong></li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Under "Permissions justification" — explain why you need <code>activeTab</code> and <code>scripting</code> (for OCR), <code>downloads</code> (to save images)</li>
+            <li><div class="check-box" onclick="this.classList.toggle('done')"></div> Click <strong>Submit for Review</strong></li>
+          </ul>
+          <div class="tip tip-info">
+            <span class="tip-icon">⏳</span>
+            <span><strong>Review time:</strong> Usually 1–5 business days for first submission. Updates to existing extensions are reviewed faster (often within hours). You'll get an email when approved or if changes are needed.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- PHASE 5: POST-LAUNCH -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">05</div>
+      <div>
+        <div class="phase-title">Post-Launch</div>
+        <div class="phase-desc">After you're live — what next</div>
+      </div>
+    </div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🔁</span>
+          <span class="step-name">Shipping Updates</span>
+          <span class="step-tag tag-cli">Terminal</span>
+        </div>
+        <div class="step-body">
+          <p>Every update follows this flow:</p>
+          <pre><code><span class="code-comment"># 1. Make your code changes</span>
+<span class="code-comment"># 2. Bump version in manifest.json → "version": "1.1.0"</span>
+<span class="code-cmd">git add</span> .
+<span class="code-cmd">git commit</span> -m <span class="code-str">"feat: add history panel"</span>
+<span class="code-cmd">git tag</span> v1.1.0
+<span class="code-cmd">git push</span> origin main --tags
+<span class="code-comment"># 3. GitHub Actions auto-creates raveneye-v1.1.0.zip</span>
+<span class="code-comment"># 4. Upload new ZIP in Chrome Developer Dashboard → Submit</span></code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-header">
+          <span class="step-icon">🔮</span>
+          <span class="step-name">v2 Roadmap Ideas</span>
+          <span class="step-tag tag-once">Future</span>
+        </div>
+        <div class="step-body">
+          <ul class="checklist">
+            <li><div class="check-box"></div> <strong>Capture history panel</strong> — keep a log of last 10 captures</li>
+            <li><div class="check-box"></div> <strong>Multi-language OCR</strong> — let users pick language in settings</li>
+            <li><div class="check-box"></div> <strong>AI text cleanup</strong> — use Claude API to fix OCR errors</li>
+            <li><div class="check-box"></div> <strong>Firefox support</strong> — WebExtensions API port</li>
+            <li><div class="check-box"></div> <strong>Annotation mode</strong> — draw arrows/highlights before capturing</li>
+            <li><div class="check-box"></div> <strong>Quick translate</strong> — auto-translate extracted text</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <!-- Quick Links -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">🔗</div>
+      <div>
+        <div class="phase-title">Quick Links</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-body" style="display:flex;flex-wrap:wrap;gap:6px;padding:16px 18px;">
+        <a class="url-pill" href="https://developer.chrome.com/docs/extensions/mv3" target="_blank">Chrome MV3 Docs</a>
+        <a class="url-pill" href="https://tesseract.projectnaptha.com/" target="_blank">Tesseract.js</a>
+        <a class="url-pill" href="https://chrome.google.com/webstore/devconsole" target="_blank">CWS Developer Console</a>
+        <a class="url-pill" href="https://developer.chrome.com/docs/webstore/publish" target="_blank">Publishing Guide</a>
+        <a class="url-pill" href="https://github.com/new" target="_blank">New GitHub Repo</a>
+        <a class="url-pill" href="https://docs.github.com/en/actions" target="_blank">GitHub Actions Docs</a>
+        <a class="url-pill" href="chrome://extensions/" target="_blank">chrome://extensions/</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>🦅 RavenEye</strong> — Built to see everything. Capture anything.<br/>
+    <span style="font-size:11px;margin-top:4px;display:block;">Plan → Code → GitHub → Chrome Web Store</span>
+  </div>
+
+</div>
+</body>
+</html>

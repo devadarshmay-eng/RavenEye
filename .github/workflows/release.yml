@@ -1,0 +1,51 @@
+name: Release RavenEye Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Update manifest version
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          VERSION_CLEAN=${VERSION#v}
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION_CLEAN\"/" extension/manifest.json
+
+      - name: Package extension as ZIP
+        run: |
+          cd extension
+          zip -r ../raveneye-${{ steps.get_version.outputs.VERSION }}.zip . \
+            --exclude "*.py" \
+            --exclude "generate_icons.py"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: RavenEye ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 🦅 RavenEye ${{ steps.get_version.outputs.VERSION }}
+            
+            ### Installation
+            1. Download `raveneye-${{ steps.get_version.outputs.VERSION }}.zip`
+            2. Extract the ZIP
+            3. Go to `chrome://extensions/`
+            4. Enable Developer Mode
+            5. Click "Load unpacked" and select the extracted folder
+            
+            ### What's New
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+          files: raveneye-${{ steps.get_version.outputs.VERSION }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
