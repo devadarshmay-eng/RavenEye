@@ -44,32 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
     applyAccentColor(currentAccent);
   });
 
-  // Capture button
+  // Capture button — delegates to background script so popup can close safely
   captureBtn.addEventListener('click', () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (!tabs[0]) return;
-      const url = tabs[0].url || '';
-      if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
-        url.startsWith('edge://') || url.startsWith('about:') ||
-        url.startsWith('devtools://') || url === '') {
-        showToast('Cannot capture on this page');
-        return;
-      }
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'ACTIVATE_CAPTURE' }, (response) => {
-        if (chrome.runtime.lastError) {
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            files: ['content.js']
-          }).catch(() => { });
-          chrome.scripting.insertCSS({
-            target: { tabId: tabs[0].id },
-            files: ['content.css']
-          }).catch(() => { });
-          setTimeout(() => {
-            chrome.tabs.sendMessage(tabs[0].id, { action: 'ACTIVATE_CAPTURE' });
-          }, 300);
-        }
-      });
+    // Tell the background script to activate capture
+    // The background script persists after popup closes
+    chrome.runtime.sendMessage({ action: 'ACTIVATE_FROM_POPUP' }, () => {
+      // Close popup after message is sent
       window.close();
     });
   });

@@ -2,20 +2,13 @@
 // Core selection, capture, and OCR logic
 
 (function () {
-  // Check if we're a stale/orphaned content script after extension reload
-  if (window.__ravenEyeLoaded) {
-    try {
-      if (chrome.runtime && chrome.runtime.id) return;
-    } catch (e) { }
-    window.__ravenEyeLoaded = false;
-    const oldOverlay = document.getElementById('raveneye-overlay');
-    if (oldOverlay) oldOverlay.remove();
-    const oldResult = document.getElementById('raveneye-result');
-    if (oldResult) oldResult.remove();
-    const oldToast = document.getElementById('raveneye-toast');
-    if (oldToast) oldToast.remove();
-  }
-  window.__ravenEyeLoaded = true;
+  console.log('[RavenEye] Content script loading...');
+
+  // Always clean up old UI elements from any previous injection
+  ['raveneye-overlay', 'raveneye-result', 'raveneye-toast'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
 
   let isActive = false;
   let startX, startY, currentX, currentY;
@@ -31,12 +24,14 @@
         dimIntensity: 50,
         blurIntensity: 0,
         saveImage: false,
+        autoCopy: true,
         theme: 'dark',
         accentColor: '#7C3AED',
         tipDuration: 4,
         showCaptureDetails: false
       }, (s) => {
         settings = s;
+        console.log('[RavenEye] Settings loaded:', JSON.stringify(s));
         resolve(s);
       });
     });
@@ -44,11 +39,14 @@
 
   // Listen for activation message from background
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('[RavenEye] Content received message:', message.action);
     if (message.action === "ACTIVATE_CAPTURE") {
       activateCapture();
       sendResponse({ success: true });
     }
   });
+
+  console.log('[RavenEye] Content script ready, listener registered');
 
   async function activateCapture() {
     if (isActive) return;
@@ -223,7 +221,23 @@
           0, 0,
           canvas.width, canvas.height
         );
-        resolve(canvas.toDataURL('image/png'));
+
+        // Try PNG first, fall back to JPEG with progressive quality reduction
+        // to stay under the OCR.space free tier ~1MB limit
+        let result = canvas.toDataURL('image/png');
+        const maxSize = 900 * 1024; // 900KB to leave margin
+
+        if (result.length > maxSize) {
+          // PNG is too large, try JPEG with decreasing quality
+          const qualities = [0.92, 0.8, 0.6, 0.4];
+          for (const q of qualities) {
+            result = canvas.toDataURL('image/jpeg', q);
+            if (result.length <= maxSize) break;
+          }
+          console.log('[RavenEye] Compressed image to', Math.round(result.length / 1024), 'KB');
+        }
+
+        resolve(result);
       };
       img.src = dataUrl;
     });
@@ -319,9 +333,13 @@
       ]);
 
       if (result && result.success && result.text) {
-        // Auto-copy text
-        copyTextToClipboard(result.text);
-        showToast('✓ Text copied to clipboard', 'success');
+        // Auto-copy text only if the setting is enabled
+        if (settings.autoCopy !== false) {
+          copyTextToClipboard(result.text);
+          showToast('✓ Text copied to clipboard', 'success');
+        } else {
+          showToast('✓ Text extracted', 'success');
+        }
 
         // Update detailed popup if shown
         const textEl = document.getElementById('raven-ocr-text');
