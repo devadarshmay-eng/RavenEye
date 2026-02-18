@@ -4,7 +4,6 @@
 
 ![RavenEye Banner](docs/banner.png)
 
-[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Available-green?logo=google-chrome)](https://chrome.google.com/webstore)
 [![Version](https://img.shields.io/badge/version-1.0.0-purple)](https://github.com/yourusername/raveneye/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -21,13 +20,13 @@ Think of it like Windows Snipping Tool — but instead of saving a screenshot, i
 ## 🚀 Features
 
 - **Click-drag selection** — Draw any rectangle on screen to capture text
-- **Instant OCR** — Powered by Tesseract.js (runs 100% in your browser, no server)
+- **Instant OCR** — Powered by OCR.space API for fast, accurate text extraction
 - **Auto-copy to clipboard** — Text is copied the moment OCR completes
 - **Save image** — Optionally download the captured region as PNG
 - **Keyboard shortcut** — `Ctrl+Shift+E` (Windows/Linux) / `Cmd+Shift+E` (Mac)
 - **Customizable dim & blur** — Control how the screen looks during selection
 - **7 accent colors** — Personalize the UI to your taste
-- **100% local** — No data leaves your browser. Ever.
+- **Smart compression** — Automatically compresses large captures for optimal OCR
 
 ---
 
@@ -37,23 +36,23 @@ Think of it like Windows Snipping Tool — but instead of saving a screenshot, i
 1. Press Ctrl+Shift+E  (or click the extension icon → Activate Capture)
 2. Screen dims
 3. Draw a rectangle over any text on screen
-4. OCR runs locally in your browser
+4. OCR extracts text from the selection
 5. Text is copied to clipboard + shown in popup
 ```
 
 ---
 
-## 🔧 Installation (Developer Mode)
-
-> While not yet on the Chrome Web Store, install manually:
+## 🔧 Installation
 
 ```bash
 # 1. Clone this repo
 git clone https://github.com/yourusername/raveneye.git
 cd raveneye
 
-# 2. Open Chrome and navigate to:
-chrome://extensions/
+# 2. Open your browser and navigate to:
+chrome://extensions/       # Chrome
+brave://extensions/        # Brave
+edge://extensions/         # Edge
 
 # 3. Enable "Developer mode" (top right toggle)
 
@@ -106,7 +105,7 @@ raveneye/
 | Layer | Technology |
 |---|---|
 | Extension API | Chrome MV3 (Manifest V3) |
-| OCR Engine | [Tesseract.js](https://tesseract.projectnaptha.com/) v5 |
+| OCR Engine | [OCR.space API](https://ocr.space/) |
 | Screen Capture | `chrome.tabs.captureVisibleTab` |
 | Storage | `chrome.storage.sync` |
 | UI | Vanilla HTML/CSS/JS |
@@ -121,16 +120,6 @@ raveneye/
 - [ ] AI-powered text cleanup (fix OCR errors)
 - [ ] Region annotation before capture
 - [ ] PDF text extraction mode
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create your feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Open a Pull Request
 
 ---
 
