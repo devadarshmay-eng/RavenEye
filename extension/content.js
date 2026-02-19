@@ -1,21 +1,22 @@
 // RavenEye Content Script
-// Core selection, capture, and OCR logic
-
 (function () {
-  console.log('[RavenEye] Content script loading...');
+  // SVG Icons for professional look
+  const ICONS = {
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+  };
 
-  // Always clean up old UI elements from any previous injection
+  // Clean up old elements
   ['raveneye-overlay', 'raveneye-result', 'raveneye-toast'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.remove();
   });
 
   let isActive = false;
-  let startX, startY, currentX, currentY;
+  let startX, startY;
   let isDragging = false;
-  let overlay, backdrop, selectionBox, dimLabel, tip, resultPopup;
+  let overlay, selectionBox, dimLabel, tip, resultPopup;
   let settings = {};
-  let tipHideTimeout = null;
 
   // Load settings
   function loadSettings() {
@@ -25,53 +26,66 @@
         blurIntensity: 0,
         saveImage: false,
         autoCopy: true,
-        theme: 'dark',
-        accentColor: '#7C3AED',
-        tipDuration: 4,
-        showCaptureDetails: false
+        theme: 'dark'
       }, (s) => {
         settings = s;
-        console.log('[RavenEye] Settings loaded:', JSON.stringify(s));
         resolve(s);
       });
     });
   }
 
-  // Listen for activation message from background
+  // Listen for activation
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('[RavenEye] Content received message:', message.action);
+    console.log('[RavenEye] Message received:', message);
     if (message.action === "ACTIVATE_CAPTURE") {
-      activateCapture();
-      sendResponse({ success: true });
+      activateCapture()
+        .then(() => sendResponse({ success: true }))
+        .catch(err => {
+          console.error('[RavenEye] Activation failed:', err);
+          sendResponse({ success: false, error: err.message });
+        });
+      return true; // Keep channel open for async response
     }
   });
 
-  console.log('[RavenEye] Content script ready, listener registered');
-
   async function activateCapture() {
-    if (isActive) return;
+    console.log('[RavenEye] Activating capture...');
+    if (isActive) {
+      console.log('[RavenEye] Already active');
+      return;
+    }
     await loadSettings();
     isActive = true;
     buildOverlay();
+    console.log('[RavenEye] Overlay built');
   }
 
   function buildOverlay() {
-    removeOverlay();
+    isActive = true;
 
-    const dimValue = settings.dimIntensity / 100;
-    const blurValue = settings.blurIntensity;
-
+    // Create Overlay
     overlay = document.createElement('div');
     overlay.id = 'raveneye-overlay';
-    overlay.style.setProperty('--raven-dim', dimValue);
-    overlay.style.setProperty('--raven-blur', blurValue + 'px');
 
-    backdrop = document.createElement('div');
+    // Apply Theme Class
+    if (settings.theme === 'light') {
+      overlay.classList.add('raven-light-theme');
+    }
+
+    // Set dynamic styles
+    overlay.style.setProperty('--raven-dim', settings.dimIntensity / 100);
+    overlay.style.setProperty('--raven-blur', settings.blurIntensity + 'px');
+
+    // Backdrop
+    const backdrop = document.createElement('div');
     backdrop.id = 'raveneye-backdrop';
+    overlay.appendChild(backdrop);
 
+    // Selection Box
     selectionBox = document.createElement('div');
     selectionBox.id = 'raveneye-selection';
 
+    // Corners
     ['tl', 'tr', 'bl', 'br'].forEach(pos => {
       const corner = document.createElement('div');
       corner.className = `raven-corner ${pos}`;
@@ -81,38 +95,19 @@
     dimLabel = document.createElement('div');
     dimLabel.id = 'raveneye-dims';
     selectionBox.appendChild(dimLabel);
+    overlay.appendChild(selectionBox);
 
+    // Tip (Professional Pill)
     tip = document.createElement('div');
     tip.id = 'raveneye-tip';
     tip.innerHTML = `
-      <div class="raven-logo">🦅 RavenEye</div>
-      <p>Drag to select a region and extract text</p>
-      <p style="margin-top:6px;font-size:11px;">
-        <span class="key">ESC</span> to cancel
-      </p>
+      <span>Draw a box to capture text</span>
+      <span class="key-hint">ESC to cancel</span>
     `;
-
-    overlay.appendChild(backdrop);
-    overlay.appendChild(selectionBox);
     overlay.appendChild(tip);
     document.body.appendChild(overlay);
 
-    overlay.style.opacity = '0';
-    requestAnimationFrame(() => {
-      overlay.style.transition = 'opacity 0.2s ease';
-      overlay.style.opacity = '1';
-    });
-
-    // Auto-hide tip
-    if (settings.tipDuration > 0) {
-      tipHideTimeout = setTimeout(() => {
-        if (tip) {
-          tip.style.transition = 'opacity 0.5s ease';
-          tip.style.opacity = '0';
-        }
-      }, settings.tipDuration * 1000);
-    }
-
+    // Event Listeners
     overlay.addEventListener('mousedown', onMouseDown);
     overlay.addEventListener('mousemove', onMouseMove);
     overlay.addEventListener('mouseup', onMouseUp);
@@ -126,83 +121,76 @@
     startX = e.clientX;
     startY = e.clientY;
     selectionBox.style.display = 'block';
+
+    // Hide tip when drawing starts
     if (tip) tip.style.opacity = '0';
+
     updateSelection(e.clientX, e.clientY);
   }
 
   function onMouseMove(e) {
     if (!isDragging) return;
-    currentX = e.clientX;
-    currentY = e.clientY;
-    updateSelection(currentX, currentY);
+    updateSelection(e.clientX, e.clientY);
   }
 
   function onMouseUp(e) {
     if (!isDragging) return;
     isDragging = false;
 
-    const rect = getSelectionRect();
+    const rect = getSelectionRect(e.clientX, e.clientY);
     if (rect.width < 10 || rect.height < 10) {
       selectionBox.style.display = 'none';
-      if (tip) tip.style.opacity = '1';
+      if (tip) tip.style.opacity = '1'; // Show tip again if selection invalid
       return;
     }
 
     captureRegion(rect);
   }
 
-  function updateSelection(x, y) {
-    const rect = getSelectionRect(x, y);
+  function updateSelection(ex, ey) {
+    const rect = getSelectionRect(ex, ey);
     selectionBox.style.left = rect.x + 'px';
     selectionBox.style.top = rect.y + 'px';
     selectionBox.style.width = rect.width + 'px';
     selectionBox.style.height = rect.height + 'px';
-    selectionBox.style.display = 'block';
-    dimLabel.textContent = `${rect.width} × ${rect.height}`;
+
+    if (dimLabel) dimLabel.textContent = `${rect.width} × ${rect.height}`;
+    selectionBox.classList.add('active');
   }
 
-  function getSelectionRect(ex = currentX, ey = currentY) {
+  function getSelectionRect(ex, ey) {
     const x = Math.min(startX, ex);
     const y = Math.min(startY, ey);
-    const width = Math.abs(ex - startX);
-    const height = Math.abs(ey - startY);
-    return { x, y, width, height };
+    return {
+      x, y,
+      width: Math.abs(ex - startX),
+      height: Math.abs(ey - startY)
+    };
   }
 
   function onKeyDown(e) {
-    if (e.key === 'Escape') {
-      deactivate();
-    }
+    if (e.key === 'Escape') deactivate();
+  }
+
+  function deactivate() {
+    if (overlay) overlay.remove();
+    document.removeEventListener('keydown', onKeyDown);
+    isActive = false;
   }
 
   async function captureRegion(rect) {
-    removeOverlay(false);
-    await sleep(80);
+    deactivate(); // Clear overlay immediately
 
-    chrome.runtime.sendMessage(
-      { action: 'CAPTURE_REGION', region: rect },
-      async (response) => {
-        if (!response || !response.success) {
-          console.error('RavenEye: capture failed', response?.error);
-          showToast('Capture failed', 'error');
-          deactivate();
-          return;
-        }
-
-        const croppedDataUrl = await cropImage(response.dataUrl, rect);
-
-        // Show detailed popup only if user enabled it in settings
-        if (settings.showCaptureDetails) {
-          showResultPopup(croppedDataUrl, rect);
-        }
-
-        // Run OCR and auto-copy
-        runOCR(croppedDataUrl);
-
-        // Deactivate capture mode
-        isActive = false;
+    chrome.runtime.sendMessage({ action: 'CAPTURE_REGION', region: rect }, async (response) => {
+      if (response && response.success) {
+        // Crop image locally to avoid sending full screenshot if possible
+        const croppedUrl = await cropImage(response.dataUrl, rect);
+        showResultPopup(croppedUrl, rect);
+        runOCR(croppedUrl);
+      } else {
+        showToast('Capture failed', 'error');
       }
-    );
+    });
   }
 
   function cropImage(dataUrl, rect) {
@@ -214,243 +202,155 @@
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(
-          img,
-          rect.x * dpr, rect.y * dpr,
-          rect.width * dpr, rect.height * dpr,
-          0, 0,
-          canvas.width, canvas.height
-        );
-
-        // Try PNG first, fall back to JPEG with progressive quality reduction
-        // to stay under the OCR.space free tier ~1MB limit
-        let result = canvas.toDataURL('image/png');
-        const maxSize = 900 * 1024; // 900KB to leave margin
-
-        if (result.length > maxSize) {
-          // PNG is too large, try JPEG with decreasing quality
-          const qualities = [0.92, 0.8, 0.6, 0.4];
-          for (const q of qualities) {
-            result = canvas.toDataURL('image/jpeg', q);
-            if (result.length <= maxSize) break;
-          }
-          console.log('[RavenEye] Compressed image to', Math.round(result.length / 1024), 'KB');
-        }
-
-        resolve(result);
+        ctx.drawImage(img, rect.x * dpr, rect.y * dpr, rect.width * dpr, rect.height * dpr, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
       };
       img.src = dataUrl;
     });
   }
 
-  function showResultPopup(croppedDataUrl, rect) {
+  function showResultPopup(dataUrl, rect) {
     resultPopup = document.createElement('div');
     resultPopup.id = 'raveneye-result';
 
-    let popX = rect.x + rect.width + 12;
-    let popY = rect.y;
-    if (popX + 370 > window.innerWidth) popX = rect.x - 372;
-    if (popX < 8) popX = 8;
-    if (popY + 320 > window.innerHeight) popY = window.innerHeight - 330;
-    if (popY < 8) popY = 8;
+    if (settings.theme === 'light') resultPopup.classList.add('raven-light-theme');
 
-    resultPopup.style.left = popX + 'px';
-    resultPopup.style.top = popY + 'px';
+    // FIXED POSITION: Top-Right (handled by CSS now)
+    // Removed dynamic calculation logic
 
     resultPopup.innerHTML = `
-      <div class="raven-result-header">
-        <span class="raven-result-title">🦅 RavenEye — Captured</span>
-        <button class="raven-close" id="raven-close-btn">✕</button>
+      <div class="raven-header">
+        <div class="raven-title">RavenEye</div>
+        <button id="raven-close" class="raven-close">${ICONS.close}</button>
       </div>
       <div class="raven-preview">
-        <img src="${croppedDataUrl}" id="raven-preview-img" alt="Captured region" />
+        <img src="${dataUrl}">
       </div>
-      <div class="raven-ocr-area">
-        <div class="raven-ocr-label">
-          <span class="raven-spinner"></span>Extracting text...
+      <div class="raven-content">
+        <div class="raven-status-row">
+          <div class="raven-loader"></div>
+          <span id="raven-status-text">Processing...</span>
         </div>
-        <div class="raven-ocr-text" id="raven-ocr-text"></div>
-      </div>
-      <div class="raven-actions">
-        <button class="raven-btn raven-btn-primary" id="raven-copy-btn">Copy Text</button>
-        ${settings.saveImage ? `<button class="raven-btn raven-btn-secondary" id="raven-save-btn">Save Image</button>` : ''}
-        <button class="raven-btn raven-btn-secondary" id="raven-copyimg-btn">Copy Image</button>
+        <div class="raven-textarea" id="raven-text" contenteditable="true"></div>
+        <div class="raven-actions">
+          <button id="raven-copy" class="raven-btn raven-btn-primary">Copy Text</button>
+          <button id="raven-copy-img" class="raven-btn">Copy Image</button>
+        </div>
       </div>
     `;
 
     document.body.appendChild(resultPopup);
 
-    document.getElementById('raven-close-btn').onclick = () => {
+    // --- Auto-Hide Logic ---
+    let hideTimer;
+    const AUTO_HIDE_DELAY = 4000; // 4 seconds
+
+    function startHideTimer() {
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => {
+        if (resultPopup) {
+          resultPopup.classList.add('hiding');
+          setTimeout(() => {
+            if (resultPopup) resultPopup.remove();
+            resultPopup = null;
+          }, 300); // Wait for transition
+        }
+      }, AUTO_HIDE_DELAY);
+    }
+
+    // Start timer initially
+    startHideTimer();
+
+    // Pause on hover / Interaction
+    resultPopup.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    resultPopup.addEventListener('mouseleave', startHideTimer);
+
+    // Also reset on any click inside (just in case)
+    resultPopup.addEventListener('click', () => {
+      clearTimeout(hideTimer);
+      // Optional: restart timer or keep open? 
+      // Requirement: "until user make a selection... popup disappear in 3-4s"
+      // Assuming hover logic covers "making selection". 
+      // But if they click "Copy", maybe we want to keep it open or close it?
+      // Let's keep it open while interacting.
+    });
+
+    // Event Bindings
+    document.getElementById('raven-close').onclick = () => {
+      clearTimeout(hideTimer);
       resultPopup.remove();
       resultPopup = null;
     };
 
-    document.getElementById('raven-copy-btn').onclick = () => {
-      const text = document.getElementById('raven-ocr-text').textContent;
-      copyTextToClipboard(text);
-      flashSuccess('raven-copy-btn', 'Copied!');
+    document.getElementById('raven-copy').onclick = () => {
+      const text = document.getElementById('raven-text').innerText;
+      navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard', 'success');
+      // Keep open after copy? User might want to copy image too.
+      // Timer is paused because mouse is inside.
     };
 
-    document.getElementById('raven-copyimg-btn').onclick = () => {
-      copyImageToClipboard(croppedDataUrl);
-      flashSuccess('raven-copyimg-btn', 'Copied!');
-    };
-
-    if (settings.saveImage) {
-      document.getElementById('raven-save-btn').onclick = () => {
-        chrome.runtime.sendMessage({
-          action: 'SAVE_IMAGE',
-          dataUrl: croppedDataUrl,
-          filename: `raveneye-${Date.now()}.png`
-        });
-        flashSuccess('raven-save-btn', 'Saved!');
-      };
-    }
-  }
-
-  // --- OCR via background API call ---
-  async function runOCR(dataUrl) {
-    // Show processing toast
-    showToast('Extracting text...', 'processing');
-
-    try {
-      const result = await Promise.race([
-        new Promise((resolve, reject) => {
-          chrome.runtime.sendMessage(
-            { action: 'RUN_OCR', dataUrl: dataUrl },
-            (response) => {
-              if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message));
-                return;
-              }
-              resolve(response);
-            }
-          );
-        }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OCR timed out')), 30000)
-        )
-      ]);
-
-      if (result && result.success && result.text) {
-        // Auto-copy text only if the setting is enabled
-        if (settings.autoCopy !== false) {
-          copyTextToClipboard(result.text);
-          showToast('✓ Text copied to clipboard', 'success');
-        } else {
-          showToast('✓ Text extracted', 'success');
-        }
-
-        // Update detailed popup if shown
-        const textEl = document.getElementById('raven-ocr-text');
-        const label = document.querySelector('.raven-ocr-label');
-        if (textEl) textEl.textContent = result.text;
-        if (label) label.innerHTML = 'Extracted Text';
-      } else {
-        showToast('No text found in selection', 'info');
-
-        const textEl = document.getElementById('raven-ocr-text');
-        const label = document.querySelector('.raven-ocr-label');
-        if (textEl) textEl.textContent = '(No text found in selection)';
-        if (label) label.innerHTML = 'Extracted Text';
+    document.getElementById('raven-copy-img').onclick = async () => {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        showToast('Image copied', 'success');
+      } catch (e) {
+        showToast('Failed to copy image', 'error');
       }
-    } catch (err) {
-      console.error('RavenEye OCR error:', err);
-      showToast('OCR failed', 'error');
+    };
+  }
 
-      const textEl = document.getElementById('raven-ocr-text');
-      const label = document.querySelector('.raven-ocr-label');
-      if (textEl) textEl.textContent = 'OCR failed. Try a clearer selection.';
-      if (label) label.innerHTML = 'Error';
+  async function runOCR(dataUrl) {
+    try {
+      const response = await new Promise(resolve => {
+        chrome.runtime.sendMessage({ action: 'RUN_OCR', dataUrl }, resolve);
+      });
+
+      const loader = document.querySelector('.raven-loader');
+      const statusText = document.getElementById('raven-status-text');
+      const textArea = document.getElementById('raven-text');
+
+      if (loader) loader.style.display = 'none';
+
+      if (response && response.success) {
+        if (settings.autoCopy) navigator.clipboard.writeText(response.text);
+
+        if (statusText) {
+          statusText.textContent = "Extracted";
+          statusText.style.color = "var(--raven-success)";
+        }
+        if (textArea) textArea.innerText = response.text;
+      } else {
+        if (statusText) {
+          statusText.textContent = "Failed";
+          statusText.style.color = "var(--raven-error)";
+        }
+        if (textArea) textArea.innerText = "No text found or error occurred.";
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('OCR Error', 'error');
     }
   }
 
-  // --- Toast notification ---
-  function showToast(message, type = 'info') {
-    // Remove existing toast
+  function showToast(msg, type = 'success') {
     const existing = document.getElementById('raveneye-toast');
     if (existing) existing.remove();
 
     const toast = document.createElement('div');
+    toast.className = `raven-toast ${type} ${settings.theme === 'light' ? 'raven-light-theme' : ''}`;
     toast.id = 'raveneye-toast';
-    toast.className = `raveneye-toast raveneye-toast-${type}`;
-    toast.textContent = message;
+    toast.innerHTML = type === 'success' ? `${ICONS.check} ${msg}` : msg;
 
     document.body.appendChild(toast);
 
-    // Animate in
-    requestAnimationFrame(() => {
-      toast.classList.add('raveneye-toast-show');
-    });
-
-    // Auto-remove after duration (longer for processing)
-    const duration = type === 'processing' ? 15000 : 3000;
+    requestAnimationFrame(() => toast.classList.add('show'));
     setTimeout(() => {
-      toast.classList.remove('raveneye-toast-show');
-      setTimeout(() => toast.remove(), 400);
-    }, duration);
-  }
-
-  function copyTextToClipboard(text) {
-    navigator.clipboard.writeText(text).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-    });
-  }
-
-  async function copyImageToClipboard(dataUrl) {
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob })
-      ]);
-    } catch (e) {
-      console.error('RavenEye: image clipboard failed', e);
-    }
-  }
-
-  function flashSuccess(btnId, text) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-    const orig = btn.textContent;
-    btn.textContent = '✓ ' + text;
-    btn.classList.add('raven-btn-success');
-    setTimeout(() => {
-      btn.textContent = orig;
-      btn.classList.remove('raven-btn-success');
-    }, 2000);
-  }
-
-  function removeOverlay(full = true) {
-    if (tipHideTimeout) {
-      clearTimeout(tipHideTimeout);
-      tipHideTimeout = null;
-    }
-    if (overlay) {
-      overlay.removeEventListener('mousedown', onMouseDown);
-      overlay.removeEventListener('mousemove', onMouseMove);
-      overlay.removeEventListener('mouseup', onMouseUp);
-      overlay.remove();
-      overlay = null;
-    }
-    document.removeEventListener('keydown', onKeyDown);
-    if (full) isActive = false;
-  }
-
-  function deactivate() {
-    removeOverlay(true);
-    isActive = false;
-  }
-
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 
 })();

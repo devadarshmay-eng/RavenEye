@@ -4,18 +4,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RavenEye</title>
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;500;600&display=swap">
+  <title>RavenEye Premium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #080512;
-      --surface: #110d20;
-      --border: rgba(124, 58, 237, 0.25);
-      --accent: #7C3AED;
-      --accent-l: #a78bfa;
-      --text: rgba(255, 255, 255, 0.85);
-      --muted: rgba(255, 255, 255, 0.4);
+      --bg: #09090b;
+      --surface: #18181b;
+      --surface-highlight: #27272a;
+      --border: #3f3f46;
+      --accent: #8b5cf6;
+      --accent-glow: rgba(139, 92, 246, 0.5);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --success: #10b981;
     }
 
     * {
@@ -25,335 +28,341 @@
     }
 
     body {
-      width: 320px;
+      width: 340px;
       background: var(--bg);
-      color: var(--text);
+      color: var(--text-main);
       font-family: 'Inter', sans-serif;
       font-size: 13px;
       overflow: hidden;
+      line-height: 1.5;
     }
 
     /* Header */
     .header {
-      background: linear-gradient(135deg, #0d0720 0%, #150d30 100%);
+      padding: 16px 20px;
+      background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 16px 18px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
+      justify-content: space-between;
     }
 
-    .header::before {
-      content: '';
-      position: absolute;
-      top: -40px;
-      right: -40px;
-      width: 120px;
-      height: 120px;
-      background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
-      pointer-events: none;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .logo-mark {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent), #4F46E5);
-      border-radius: 9px;
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
-    }
-
-    .logo-text {
-      flex: 1;
-    }
-
-    .logo-text h1 {
-      font-family: 'Cinzel', serif;
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.08em;
-      line-height: 1;
-    }
-
-    .logo-text p {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 2px;
-      letter-spacing: 0.05em;
-    }
-
-    .version-badge {
-      font-size: 9px;
-      background: rgba(124, 58, 237, 0.2);
-      border: 1px solid rgba(124, 58, 237, 0.35);
-      color: var(--accent-l);
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-    }
-
-    /* Capture Button */
-    .capture-btn {
-      margin: 16px 18px 12px;
-      width: calc(100% - 36px);
-      padding: 11px;
-      background: linear-gradient(135deg, #7C3AED, #4F46E5);
-      border: none;
-      border-radius: 10px;
       color: white;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    /* If logo image exists, use it instead of emoji */
+    .logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
       font-weight: 600;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+
+    .brand-text span {
+      font-size: 10px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: -2px;
+    }
+
+    .version {
+      font-size: 9px;
+      background: var(--surface-highlight);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* Main Action */
+    .hero-action {
+      padding: 20px;
+      text-align: center;
+      background: radial-gradient(circle at center, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+    }
+
+    .capture-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
       cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
+      box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: 8px;
     }
 
     .capture-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(124, 58, 237, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
     }
 
     .capture-btn:active {
       transform: translateY(0);
     }
 
-    .shortcut-hint {
-      text-align: center;
+    .hint {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .hint kbd {
+      background: var(--surface-highlight);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    /* Settings List */
+    .settings-container {
+      padding: 0 20px 20px;
+    }
+
+    .section-title {
       font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 14px;
-      letter-spacing: 0.04em;
-    }
-
-    .shortcut-hint kbd {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
-      padding: 1px 5px;
-      font-family: 'Courier New', monospace;
-      font-size: 9px;
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    /* Divider */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0 18px;
-    }
-
-    /* Settings Section */
-    .settings {
-      padding: 14px 18px;
-    }
-
-    .section-label {
-      font-size: 9px;
-      font-weight: 600;
-      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
       margin-bottom: 12px;
+      font-weight: 600;
     }
 
-    .setting-row {
+    .setting-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
-    .setting-label {
-      font-size: 12px;
-      color: var(--text);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .setting-label .icon {
-      font-size: 14px;
-    }
-
-    .setting-sub {
-      font-size: 10px;
-      color: var(--muted);
-      display: block;
-    }
-
-    /* Slider */
-    .slider-wrap {
-      display: flex;
-      align-items: center;
+    .setting-item.stacked {
+      flex-direction: column;
+      align-items: flex-start;
       gap: 8px;
     }
 
-    .slider-val {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--accent-l);
+    .setting-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-box {
       width: 28px;
-      text-align: right;
-      font-family: 'Courier New', monospace;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--surface-highlight);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 14px;
     }
 
-    input[type=range] {
-      -webkit-appearance: none;
-      width: 90px;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(124, 58, 237, 0.25);
-      outline: none;
+    .setting-text {
+      display: flex;
+      flex-direction: column;
     }
 
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(124, 58, 237, 0.5);
-      transition: box-shadow 0.2s;
+    .setting-label {
+      font-size: 13px;
+      font-weight: 500;
     }
 
-    input[type=range]::-webkit-slider-thumb:hover {
-      box-shadow: 0 2px 10px rgba(124, 58, 237, 0.7);
+    .setting-desc {
+      font-size: 10px;
+      color: var(--text-muted);
     }
 
-    /* Toggle Switch */
-    .toggle {
+    /* Custom Controls */
+    /* Toggle */
+    .toggle-switch {
       position: relative;
-      width: 36px;
-      height: 20px;
+      width: 40px;
+      height: 22px;
     }
 
-    .toggle input {
+    .toggle-switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
 
-    .toggle-track {
+    .slider {
       position: absolute;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
       cursor: pointer;
-      transition: background 0.2s;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--surface-highlight);
+      transition: .3s;
+      border-radius: 34px;
+      border: 1px solid var(--border);
     }
 
-    .toggle-track::before {
-      content: '';
+    .slider:before {
       position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
       left: 2px;
-      top: 2px;
-      width: 14px;
-      height: 14px;
-      background: rgba(255, 255, 255, 0.5);
+      bottom: 2px;
+      background-color: var(--text-muted);
+      transition: .3s;
       border-radius: 50%;
-      transition: transform 0.2s, background 0.2s;
     }
 
-    input:checked+.toggle-track {
-      background: rgba(124, 58, 237, 0.5);
-      border-color: rgba(124, 58, 237, 0.6);
+    input:checked+.slider {
+      background-color: var(--accent);
+      border-color: var(--accent);
     }
 
-    input:checked+.toggle-track::before {
-      transform: translateX(16px);
-      background: var(--accent-l);
+    input:checked+.slider:before {
+      transform: translateX(18px);
+      background-color: white;
     }
 
-    /* Color accent picker */
-    .color-row {
+    /* Range Slider */
+    .range-wrapper {
       display: flex;
-      gap: 6px;
-      margin-top: 4px;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      justify-content: flex-end;
     }
 
-    .color-swatch {
-      width: 22px;
-      height: 22px;
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100px;
+      height: 4px;
+      background: var(--surface-highlight);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
+      background: var(--accent);
       cursor: pointer;
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .range-value {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-muted);
+      width: 30px;
+      text-align: right;
+    }
+
+    /* Color Palette */
+    .color-grid {
+      display: flex;
+      gap: 8px;
+    }
+
+    .color-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
       border: 2px solid transparent;
-      transition: transform 0.15s, border-color 0.15s;
-      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.2s;
     }
 
-    .color-swatch:hover {
-      transform: scale(1.15);
+    .color-btn:hover {
+      transform: scale(1.1);
     }
 
-    .color-swatch.active {
-      border-color: white;
+    .color-btn.active {
+      border-color: var(--text-main);
+      box-shadow: 0 0 0 2px var(--bg);
     }
 
     /* Footer */
     .footer {
-      padding: 10px 18px 14px;
+      padding: 12px 20px;
       border-top: 1px solid var(--border);
+      background: var(--surface);
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
 
-    .footer-link {
-      font-size: 10px;
-      color: var(--muted);
+    .footer a {
+      color: var(--text-muted);
       text-decoration: none;
-      letter-spacing: 0.04em;
+      font-size: 11px;
       transition: color 0.2s;
     }
 
-    .footer-link:hover {
-      color: var(--accent-l);
+    .footer a:hover {
+      color: var(--text-main);
     }
 
-    .footer-made {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.2);
-      letter-spacing: 0.04em;
-    }
-
-    /* Saved toast */
-    #saved-toast {
+    /* Saved Toast */
+    .toast {
       position: fixed;
-      bottom: 12px;
+      bottom: 20px;
       left: 50%;
-      transform: translateX(-50%) translateY(40px);
-      background: #10b981;
-      color: white;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 5px 14px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface-highlight);
+      border: 1px solid var(--border);
+      color: var(--success);
+      padding: 8px 16px;
       border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
       opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       pointer-events: none;
-      white-space: nowrap;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     }
 
-    #saved-toast.show {
-      opacity: 1;
+    .toast.show {
       transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
@@ -361,132 +370,121 @@
 <body>
 
   <div class="header">
-    <div class="logo-mark">🦅</div>
-    <div class="logo-text">
-      <h1>RavenEye</h1>
-      <p>Screen Text Extractor</p>
+    <div class="brand">
+      <div class="logo-icon">
+        <img src="icons/icon128.png" alt="RavenEye Logo">
+      </div>
+      <div class="brand-text">
+        <h1>RavenEye</h1>
+        <span>Text Extractor</span>
+      </div>
     </div>
-    <span class="version-badge">v1.0</span>
+    <div class="version">v1.1</div>
   </div>
 
-  <button class="capture-btn" id="captureBtn">
-    <span>✦</span> Activate Capture
-  </button>
-  <div class="shortcut-hint">or use <kbd>Ctrl+Shift+E</kbd></div>
+  <div class="hero-action">
+    <button class="capture-btn" id="captureBtn">
+      <span>✦</span> Activate Capture
+    </button>
+    <div class="hint">or press <kbd>Ctrl+Shift+E</kbd></div>
+  </div>
 
-  <div class="divider"></div>
+  <div class="settings-container">
+    <div class="section-title">Visual Settings</div>
 
-  <div class="settings">
-    <div class="section-label">⚙ Settings</div>
-
-    <!-- Dim Intensity -->
-    <div class="setting-row">
-      <div class="setting-label">
-        <span class="icon">🌑</span>
-        <span>Dim Intensity</span>
-      </div>
-      <div class="slider-wrap">
-        <input type="range" id="dimSlider" min="0" max="90" value="50" />
-        <span class="slider-val" id="dimVal">50%</span>
-      </div>
-    </div>
-
-    <!-- Blur Intensity -->
-    <div class="setting-row">
-      <div class="setting-label">
-        <span class="icon">💠</span>
-        <span>Blur Effect</span>
-      </div>
-      <div class="slider-wrap">
-        <input type="range" id="blurSlider" min="0" max="20" value="0" />
-        <span class="slider-val" id="blurVal">0px</span>
-      </div>
-    </div>
-
-    <!-- Tip Duration -->
-    <div class="setting-row">
-      <div class="setting-label">
-        <span class="icon">⏱</span>
-        <div>
-          <span>Tip Duration</span>
-          <span class="setting-sub">Auto-hide instructions (0 = stay)</span>
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="icon-box">🌑</div>
+        <div class="setting-text">
+          <span class="setting-label">Dim Level</span>
         </div>
       </div>
-      <div class="slider-wrap">
-        <input type="range" id="tipDurationSlider" min="0" max="10" value="4" />
-        <span class="slider-val" id="tipDurationVal">4s</span>
+      <div class="range-wrapper">
+        <input type="range" id="dimSlider" min="0" max="90" value="50">
+        <span class="range-value" id="dimVal">50%</span>
       </div>
     </div>
 
-    <!-- Save Image toggle -->
-    <div class="setting-row">
-      <div class="setting-label">
-        <span class="icon">💾</span>
-        <div>
-          <span>Save Image</span>
-          <span class="setting-sub">Download captured region</span>
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="icon-box">💧</div>
+        <div class="setting-text">
+          <span class="setting-label">Blur</span>
         </div>
       </div>
-      <label class="toggle">
-        <input type="checkbox" id="saveImageToggle" />
-        <span class="toggle-track"></span>
+      <div class="range-wrapper">
+        <input type="range" id="blurSlider" min="0" max="20" value="0">
+        <span class="range-value" id="blurVal">0px</span>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top: 20px;">Preferences</div>
+
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="icon-box">💾</div>
+        <div class="setting-text">
+          <span class="setting-label">Auto Save</span>
+          <span class="setting-desc">Download image</span>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="saveImageToggle">
+        <span class="slider"></span>
       </label>
     </div>
 
-    <!-- Auto-copy -->
-    <div class="setting-row">
-      <div class="setting-label">
-        <span class="icon">📋</span>
-        <div>
-          <span>Auto-copy Text</span>
-          <span class="setting-sub">Copy to clipboard after capture</span>
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="icon-box">📋</div>
+        <div class="setting-text">
+          <span class="setting-label">Auto Copy</span>
+          <span class="setting-desc">Copy to clipboard</span>
         </div>
       </div>
-      <label class="toggle">
-        <input type="checkbox" id="autoCopyToggle" checked />
-        <span class="toggle-track"></span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="autoCopyToggle" checked>
+        <span class="slider"></span>
       </label>
     </div>
 
-    <!-- Show Capture Details -->
-    <div class="setting-row">
-      <div class="setting-label">
-        <span class="icon">🖼</span>
-        <div>
-          <span>Show Capture Details</span>
-          <span class="setting-sub">Show preview popup after selection</span>
+    <!-- Theme Toggle -->
+    <div class="setting-item">
+      <div class="setting-info">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </div>
+        <div class="setting-text">
+          <span class="setting-label">Theme</span>
+          <span class="setting-desc">Switch dark/light mode</span>
         </div>
       </div>
-      <label class="toggle">
-        <input type="checkbox" id="showCaptureDetailsToggle" />
-        <span class="toggle-track"></span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="slider"></span>
       </label>
-    </div>
-
-    <!-- Accent Color -->
-    <div class="setting-row" style="align-items: flex-start; flex-direction: column; gap: 8px;">
-      <div class="setting-label">
-        <span class="icon">🎨</span>
-        <span>Accent Color</span>
-      </div>
-      <div class="color-row" id="colorRow">
-        <div class="color-swatch active" data-color="#7C3AED" style="background:#7C3AED"></div>
-        <div class="color-swatch" data-color="#2563EB" style="background:#2563EB"></div>
-        <div class="color-swatch" data-color="#0891B2" style="background:#0891B2"></div>
-        <div class="color-swatch" data-color="#059669" style="background:#059669"></div>
-        <div class="color-swatch" data-color="#DC2626" style="background:#DC2626"></div>
-        <div class="color-swatch" data-color="#D97706" style="background:#D97706"></div>
-        <div class="color-swatch" data-color="#DB2777" style="background:#DB2777"></div>
-      </div>
     </div>
   </div>
 
   <div class="footer">
-    <a class="footer-link" href="https://github.com/yourusername/raveneye" target="_blank">GitHub ↗</a>
-    <span class="footer-made">Made with 🦅 RavenEye</span>
+    <a href="#" target="_blank">Help & Support</a>
+    <a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank">GitHub ↗</a>
   </div>
 
-  <div id="saved-toast">✓ Settings saved</div>
+  <div id="saved-toast" class="toast">
+    <span>✓</span> Saved
+  </div>
 
   <script src="popup.js"></script>
 </body>
