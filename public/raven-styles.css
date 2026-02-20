@@ -1,0 +1,175 @@
+/* RavenEye Content Styles - Shadcn Inspired */
+
+/* Variables matching the dark theme */
+:root {
+  --raven-bg: 24 24 27;
+  /* Zinc 950 */
+  --raven-fg: 250 250 250;
+  /* Zinc 50 */
+  --raven-card: 24 24 27;
+  --raven-card-fg: 250 250 250;
+  --raven-primary: 250 250 250;
+  --raven-primary-fg: 24 24 27;
+  --raven-border: 63 63 70;
+  /* Zinc 700 */
+  --raven-muted: 39 39 42;
+  /* Zinc 800 */
+  --raven-muted-fg: 161 161 170;
+  /* Zinc 400 */
+  --raven-radius: 0.5rem;
+  --raven-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Base Font */
+.raven-ui {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  animation: ravenSlideIn 0.3s ease-out;
+  /* Transitions for smooth exit */
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: translateY(0);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#raveneye-result.hiding {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+@keyframes ravenSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* OVERLAY & SELECTION */
+#re-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  cursor: crosshair;
+  user-select: none;
+}
+
+#re-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, var(--raven-dim, 0.5));
+  backdrop-filter: blur(var(--raven-blur, 0px));
+  transition: opacity 0.2s;
+}
+
+/* Ensure selection is transparent so text is visible */
+#re-selection {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background-color: transparent !important;
+  /* CRITICAL: Must be transparent */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, var(--raven-dim, 0.5));
+  pointer-events: none;
+  display: none;
+  z-index: 2147483647;
+}
+
+#re-selection::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px dashed rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+#re-dims {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  background: white;
+  color: black;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.raven-text-area {
+  width: 100%;
+  min-height: 80px;
+  background-color: #18181b !important;
+  /* Force Dark Background */
+  color: #fafafa !important;
+  /* Force White Text */
+  border: 1px solid rgb(var(--raven-border));
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: monospace;
+  resize: none;
+  z-index: 2147483647;
+}
+
+.raven-text-area:focus {
+  outline: 2px solid white !important;
+  border-color: transparent;
+}
+
+/* ... existing code ... */
+
+/* Button contrast fixes */
+.raven-btn.primary {
+  background-color: #fafafa !important;
+  /* Zinc-50 */
+  color: #18181b !important;
+  /* Zinc-900 - Ensures text is visible on white */
+  border: none;
+  font-weight: 600;
+}
+
+.raven-btn.primary:hover {
+  background-color: #f4f4f5 !important;
+  /* Zinc-100 */
+  opacity: 1;
+}
+
+.raven-btn.primary svg {
+  stroke: currentColor;
+}
+
+/* TOAST */
+.raven-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgb(var(--raven-card));
+  color: rgb(var(--raven-fg));
+  border: 1px solid rgb(var(--raven-border));
+  padding: 12px 24px;
+  border-radius: var(--raven-radius);
+  font-size: 14px;
+  box-shadow: var(--raven-shadow);
+  z-index: 2147483647;
+  animation: ravenToastSlide 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes ravenToastSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
