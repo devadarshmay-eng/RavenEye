@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const captureBtn = document.getElementById('captureBtn');
   const colorSwatches = document.querySelectorAll('.color-swatch');
   const toast = document.getElementById('saved-toast');
+  const apiKeyInput = document.getElementById('apiKeyInput');
 
   let currentAccent = '#7C3AED';
 
@@ -24,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     autoCopy: true,
     accentColor: '#7C3AED',
     tipDuration: 4,
-    showCaptureDetails: false
+    showCaptureDetails: false,
+    ocrApiKey: ''
   }, (settings) => {
     dimSlider.value = settings.dimIntensity;
     dimVal.textContent = settings.dimIntensity + '%';
@@ -38,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tipDurationSlider.value = settings.tipDuration;
     tipDurationVal.textContent = settings.tipDuration + 's';
+
+    apiKeyInput.value = settings.ocrApiKey || '';
 
     currentAccent = settings.accentColor;
     updateActiveSwatch(currentAccent);
@@ -66,8 +70,56 @@ document.addEventListener('DOMContentLoaded', () => {
     saveSettings();
   });
 
+  // API Key Management
+  const toggleApiKeyBtn = document.getElementById('toggleApiKeyVisibility');
+  const saveApiKeyBtn = document.getElementById('saveApiKey');
+  const apiKeySaveStatus = document.getElementById('apiKeySaveStatus');
+  let apiKeyVisible = false;
+  
+  // Toggle API key visibility
+  toggleApiKeyBtn.addEventListener('click', () => {
+    apiKeyVisible = !apiKeyVisible;
+    apiKeyInput.type = apiKeyVisible ? 'text' : 'password';
+    toggleApiKeyBtn.textContent = apiKeyVisible ? '🙈' : '👁️';
+  });
+  
+  // Save API key button
+  saveApiKeyBtn.addEventListener('click', () => {
+    const apiKey = apiKeyInput.value.trim();
+    
+    if (!apiKey) {
+      apiKeySaveStatus.textContent = '⚠️ Please enter an API key';
+      apiKeySaveStatus.style.color = '#ff6b6b';
+      return;
+    }
+    
+    // Save to storage
+    chrome.storage.sync.set({
+      ocrApiKey: apiKey
+    }, () => {
+      // Show success message
+      apiKeySaveStatus.textContent = '✓ API key saved successfully';
+      apiKeySaveStatus.style.color = '#C6FF33';
+      saveApiKeyBtn.style.background = '#4caf50';
+      saveApiKeyBtn.textContent = 'Saved!';
+      
+      // Reset button after 2 seconds
+      setTimeout(() => {
+        saveApiKeyBtn.style.background = 'var(--accent)';
+        saveApiKeyBtn.textContent = 'Save API Key';
+        apiKeySaveStatus.textContent = '';
+      }, 2000);
+    });
+  });
+  
+  // Enter key to save
+  apiKeyInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      saveApiKeyBtn.click();
+    }
+  });
+
   // Toggles
-  saveImageToggle.addEventListener('change', saveSettings);
   autoCopyToggle.addEventListener('change', saveSettings);
   showCaptureDetailsToggle.addEventListener('change', saveSettings);
 
@@ -138,7 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
       autoCopy: autoCopyToggle.checked,
       showCaptureDetails: showCaptureDetailsToggle.checked,
       accentColor: currentAccent,
-      tipDuration: parseInt(tipDurationSlider.value)
+      tipDuration: parseInt(tipDurationSlider.value),
+      ocrApiKey: apiKeyInput.value.trim()
     }, () => {
       showToast();
     });

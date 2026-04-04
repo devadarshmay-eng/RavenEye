@@ -1,5 +1,19 @@
 # RavenEye .gitignore
 
+# Documentation markdown files (keep locally, not on public GitHub)
+*.md
+!README.md
+
+# Internal documentation files
+START_HERE.md
+MASTER_CHECKLIST.md
+DEPLOYMENT_GUIDE.md
+TESTING_INSTRUCTIONS.md
+API_KEY_STRATEGY.md
+SCREENSHOT_GUIDE.md
+PRIVACY_HOSTING_GUIDE.md
+PRODUCTION_READY_SUMMARY.md
+
 # OS
 .DS_Store
 Thumbs.db
@@ -10,10 +24,10 @@ Thumbs.db
 node_modules/
 npm-debug.log
 yarn.lock
-package-lock.json
 
 # Build outputs
 dist/
+dist-extension/
 *.zip
 *.crx
 *.pem
@@ -28,3 +42,6 @@ __pycache__/
 .vscode/
 .idea/
 *.sublime-workspace
+
+# Test files
+test_write.txt

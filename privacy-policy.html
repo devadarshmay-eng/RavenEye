@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RavenEye Privacy Policy</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #8b5cf6;
+            border-bottom: 3px solid #8b5cf6;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        p, li {
+            color: #666;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        .update-date {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        a {
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Privacy Policy for RavenEye</h1>
+        
+        <div class="update-date">
+            <strong>Last Updated:</strong> April 3, 2026<br>
+            <strong>Effective Date:</strong> April 3, 2026
+        </div>
+        
+        <p>RavenEye ("we", "our", "the extension") is committed to protecting your privacy. This Privacy Policy explains how we handle data when you use our browser extension.</p>
+        
+        <h2>1. Information We Collect</h2>
+        <p><strong class="highlight">We do NOT collect, store, or transmit any personal information to our servers.</strong></p>
+        <p>RavenEye operates entirely within your browser. All data processing happens locally on your device.</p>
+        
+        <h2>2. Data Stored Locally on Your Device</h2>
+        <p>The extension stores the following data <strong>only on your device</strong> using Chrome's secure storage API (chrome.storage.sync):</p>
+        <ul>
+            <li><strong>OCR.space API Key:</strong> Your personal API key is encrypted and stored locally. It is never transmitted to us.</li>
+            <li><strong>User Preferences:</strong> Visual settings including:
+                <ul>
+                    <li>Dim level intensity</li>
+                    <li>Blur intensity</li>
+                    <li>Accent color selection</li>
+                    <li>Auto-copy toggle state</li>
+                    <li>Auto-save toggle state</li>
+                    <li>Tip duration preference</li>
+                </ul>
+            </li>
+        </ul>
+        <p>This data is synchronized across your devices if you use Chrome/Edge Sync, but <strong>it remains private to you</strong> and is not accessible to us.</p>
+        
+        <h2>3. Third-Party Services</h2>
+        <p>When you activate the OCR feature and capture a screenshot, RavenEye sends the captured image to:</p>
+        
+        <h3>OCR.space API</h3>
+        <ul>
+            <li><strong>Purpose:</strong> To perform Optical Character Recognition (convert image to text)</li>
+            <li><strong>Data Sent:</strong> Screenshot image only (temporary)</li>
+            <li><strong>Your API Key:</strong> Used to authenticate your request with OCR.space</li>
+            <li><strong>Data Retention:</strong> OCR.space processes images in real-time and does not permanently store them</li>
+            <li><strong>Privacy Policy:</strong> <a href="https://ocr.space/privacypolicy" target="_blank">https://ocr.space/privacypolicy</a></li>
+        </ul>
+        
+        <p><strong>Important:</strong> You control your own API key and quota. We do not share API credentials with other users.</p>
+        
+        <h2>4. Permissions Explained</h2>
+        <p>RavenEye requests the following browser permissions. Here's why each is necessary:</p>
+        <ul>
+            <li><strong>activeTab:</strong> Required to capture screenshots of the current tab when you activate the extension</li>
+            <li><strong>tabs:</strong> Required to query which tab is active</li>
+            <li><strong>scripting:</strong> Required to inject the visual capture interface into web pages</li>
+            <li><strong>storage:</strong> Required to save your settings and API key locally in encrypted browser storage</li>
+            <li><strong>clipboardWrite:</strong> Required to copy extracted text to your clipboard (when auto-copy is enabled)</li>
+            <li><strong>downloads:</strong> Required to save captured images to your Downloads folder (when auto-save is enabled)</li>
+            <li><strong>&lt;all_urls&gt; (host permissions):</strong> Required to work on any website you choose to capture from</li>
+        </ul>
+        
+        <h2>5. Analytics & Tracking</h2>
+        <p><strong class="highlight">RavenEye does NOT use:</strong></p>
+        <ul>
+            <li>Google Analytics or any analytics service</li>
+            <li>Cookies</li>
+            <li>User behavior tracking</li>
+            <li>Advertising networks</li>
+            <li>Telemetry or crash reporting services</li>
+            <li>Fingerprinting or device identification</li>
+        </ul>
+        <p>We have no way of knowing how you use the extension, what websites you visit, or what text you extract.</p>
+        
+        <h2>6. Data Sharing</h2>
+        <p><strong>We do NOT:</strong></p>
+        <ul>
+            <li>Share your data with third parties</li>
+            <li>Sell your data</li>
+            <li>Rent your data</li>
+            <li>Use your data for marketing</li>
+            <li>Collect your browsing history</li>
+        </ul>
+        <p>Your API key and settings remain on your device. The only data transmission is the screenshot you choose to process via OCR.space's API.</p>
+        
+        <h2>7. Data Security</h2>
+        <ul>
+            <li>Your API key is stored using Chrome's secure storage API with encryption</li>
+            <li>All network requests to OCR.space use HTTPS (encrypted communication)</li>
+            <li>Screenshots are sent directly from your browser to OCR.space (we never see them)</li>
+            <li>No data is stored on our servers (we don't have any servers)</li>
+        </ul>
+        
+        <h2>8. Your Rights & Control</h2>
+        <p>You have complete control over your data:</p>
+        <ul>
+            <li><strong>Delete Your Data:</strong> Uninstall the extension to remove all locally stored settings and API key</li>
+            <li><strong>Revoke API Key:</strong> Log in to OCR.space to delete or regenerate your API key</li>
+            <li><strong>Clear Settings:</strong> Remove and reinstall the extension to reset all preferences</li>
+            <li><strong>Disable Features:</strong> Toggle off auto-copy or auto-save at any time in settings</li>
+        </ul>
+        
+        <h2>9. Children's Privacy</h2>
+        <p>RavenEye does not knowingly collect personal information from anyone, including children under 13 years of age. The extension is suitable for all ages.</p>
+        
+        <h2>10. Changes to This Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time to reflect changes in:</p>
+        <ul>
+            <li>Extension features</li>
+            <li>Legal requirements</li>
+            <li>Privacy best practices</li>
+        </ul>
+        <p>Changes will be posted on this page with an updated "Last Updated" date. We encourage you to review this policy periodically.</p>
+        
+        <h2>11. Open Source & Transparency</h2>
+        <p>RavenEye is <strong>open source</strong>. You can:</p>
+        <ul>
+            <li>Review the entire source code on GitHub: <a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank">https://github.com/devadarshmay-eng/RavenEye</a></li>
+            <li>Verify that we do not collect any data</li>
+            <li>Audit how your API key is stored and used</li>
+            <li>Contribute improvements or report security issues</li>
+        </ul>
+        
+        <h2>12. Contact Information</h2>
+        <p>If you have questions, concerns, or requests regarding this Privacy Policy or your data:</p>
+        <ul>
+            <li><strong>GitHub Issues:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye/issues" target="_blank">https://github.com/devadarshmay-eng/RavenEye/issues</a></li>
+            <li><strong>GitHub Discussions:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye/discussions" target="_blank">https://github.com/devadarshmay-eng/RavenEye/discussions</a></li>
+        </ul>
+        
+        <h2>13. Consent</h2>
+        <p>By installing and using RavenEye, you consent to this Privacy Policy. If you do not agree with this policy, please do not install or use the extension.</p>
+        
+        <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
+        
+        <h2>Summary</h2>
+        <p><strong>In plain English:</strong></p>
+        <ol>
+            <li>We don't collect your personal data - everything stays on your device</li>
+            <li>Your API key is stored securely in your browser</li>
+            <li>Screenshots are sent to OCR.space for processing (not to us)</li>
+            <li>We don't track you, use analytics, or serve ads</li>
+            <li>You can delete all data by uninstalling the extension</li>
+            <li>The code is open source - you can verify everything</li>
+        </ol>
+        
+        <p style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #999; font-size: 14px;">
+            RavenEye Extension &copy; 2026 | MIT License | <a href="https://github.com/devadarshmay-eng/RavenEye">Open Source on GitHub</a>
+        </p>
+    </div>
+</body>
+</html>

@@ -1,5 +1,4 @@
 // RavenEye - Background Service Worker
-console.log('[RavenEye] Background Worker Loaded - v2 (Fix Target)');
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === "activate-capture") {
@@ -10,23 +9,18 @@ chrome.commands.onCommand.addListener((command) => {
 function activateCapture() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) {
-      console.warn('[RavenEye] No active tab found');
       return;
     }
     const url = tabs[0].url || '';
     if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
       url.startsWith('edge://') || url.startsWith('about:') ||
       url.startsWith('devtools://') || url === '') {
-      console.warn('[RavenEye] Cannot activate on restricted page:', url);
       return;
     }
-    console.log('[RavenEye] Activating capture on tab:', tabs[0].id, url);
 
     chrome.tabs.sendMessage(tabs[0].id, { action: "ACTIVATE_CAPTURE" }, (response) => {
       // Check for last error (content script not ready)
       if (chrome.runtime.lastError) {
-        console.log('[RavenEye] Injecting content script...', chrome.runtime.lastError.message);
-
         // Inject Script + CSS
         Promise.all([
           chrome.scripting.executeScript({
@@ -38,15 +32,12 @@ function activateCapture() {
             files: ["raven-styles.css"]
           })
         ]).then(() => {
-          console.log('[RavenEye] Injection success. Retrying activation...');
           setTimeout(() => {
             chrome.tabs.sendMessage(tabs[0].id, { action: "ACTIVATE_CAPTURE" });
           }, 500);
         }).catch(err => {
           console.error('[RavenEye] Injection failed:', err);
         });
-      } else {
-        console.log('[RavenEye] Content script already active.');
       }
     });
   });
@@ -89,8 +80,20 @@ async function handleCapture(message, sender, sendResponse) {
 
 async function handleOCR(dataUrl, sendResponse) {
   try {
+    // Retrieve API key from storage
+    const settings = await chrome.storage.sync.get({ ocrApiKey: '' });
+    const apiKey = settings.ocrApiKey.trim();
+
+    if (!apiKey) {
+      sendResponse({ 
+        success: false, 
+        error: 'API key not configured. Please add your OCR.space API key in the extension settings. Get a free key at https://ocr.space/ocrapi' 
+      });
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('apikey', 'K87912588588957');
+    formData.append('apikey', apiKey);
     formData.append('base64Image', dataUrl);
     formData.append('language', 'eng');
     formData.append('isOverlayRequired', 'false');
@@ -111,6 +114,12 @@ async function handleOCR(dataUrl, sendResponse) {
 
     if (result.OCRExitCode === 1 && result.ParsedResults?.length > 0) {
       sendResponse({ success: true, text: result.ParsedResults[0].ParsedText.trim() });
+    } else if (result.OCRExitCode === 99) {
+      // Invalid API key
+      sendResponse({ 
+        success: false, 
+        error: 'Invalid API key. Please check your OCR.space API key in settings.' 
+      });
     } else {
       sendResponse({ success: true, text: '' }); // No text found
     }
