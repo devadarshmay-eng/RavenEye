@@ -89,13 +89,13 @@
         <h2>3. Third-Party Services</h2>
         <p>When you activate the OCR feature and capture a screenshot, RavenEye sends the captured image to:</p>
         
-        <h3>EasyOCR Endpoint</h3>
+        <h3>OCR.space Endpoint</h3>
         <ul>
             <li><strong>Purpose:</strong> To perform Optical Character Recognition (convert image to text)</li>
             <li><strong>Data Sent:</strong> Screenshot image only (temporary)</li>
             <li><strong>Authentication:</strong> No API key is required from the user</li>
             <li><strong>Data Retention:</strong> RavenEye does not persist captures on developer-controlled servers</li>
-            <li><strong>Endpoint:</strong> <a href="https://api.easyocr.org/" target="_blank">https://api.easyocr.org/</a></li>
+            <li><strong>Endpoint:</strong> <a href="https://api.ocr.space/parse/image" target="_blank">https://api.ocr.space/parse/image</a></li>
         </ul>
         
         <h2>4. Permissions Explained</h2>
@@ -107,7 +107,7 @@
             <li><strong>storage:</strong> Required to save your settings locally in encrypted browser storage</li>
             <li><strong>clipboardWrite:</strong> Required to copy extracted text to your clipboard (when auto-copy is enabled)</li>
             <li><strong>downloads:</strong> Required to save captured images to your Downloads folder (when auto-save is enabled)</li>
-            <li><strong>https://api.easyocr.org/* (host permission):</strong> Required only to send your selected image for OCR text extraction</li>
+            <li><strong>https://api.ocr.space/* (host permission):</strong> Required only to send your selected image for OCR text extraction</li>
         </ul>
         
         <h2>5. Analytics & Tracking</h2>

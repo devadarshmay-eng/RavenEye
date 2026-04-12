@@ -128,9 +128,8 @@ async function handleCapture(message, sender, sendResponse) {
   }
 }
 
-const EASY_OCR_ENDPOINTS = [
-  "https://api.easyocr.org/ocr"
-];
+const OCR_PROVIDER_ENDPOINT = "https://api.ocr.space/parse/image";
+const OCR_PROVIDER_SHARED_KEY = "helloworld";
 
 async function dataUrlToBlob(dataUrl) {
   if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
@@ -145,83 +144,53 @@ async function dataUrlToBlob(dataUrl) {
   return response.blob();
 }
 
-function extractTextFromEasyOcrResponse(payload) {
-  const textChunks = [];
+async function requestOcrSpace(imageBlob) {
+  const formData = new FormData();
+  formData.append("apikey", OCR_PROVIDER_SHARED_KEY);
+  formData.append("file", imageBlob, `raveneye-${Date.now()}.png`);
+  formData.append("language", "eng");
+  formData.append("isOverlayRequired", "false");
+  formData.append("scale", "true");
+  formData.append("OCREngine", "2");
 
-  const collect = (node) => {
-    if (!node) return;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    if (typeof node === "string") {
-      const cleaned = node.trim();
-      if (cleaned) {
-        textChunks.push(cleaned);
-      }
-      return;
+  try {
+    const response = await fetch(OCR_PROVIDER_ENDPOINT, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`OCR provider error (${response.status}).`);
     }
 
-    if (Array.isArray(node)) {
-      node.forEach(collect);
-      return;
+    const payload = await response.json();
+    if (payload?.OCRExitCode === 1 && Array.isArray(payload.ParsedResults)) {
+      const extracted = payload.ParsedResults
+        .map((entry) => (entry?.ParsedText || "").trim())
+        .filter(Boolean)
+        .join("\n")
+        .trim();
+      return extracted;
     }
 
-    if (typeof node === "object") {
-      const directKeys = ["text", "word", "lineText", "ParsedText"];
-      directKeys.forEach((key) => {
-        if (typeof node[key] === "string") {
-          collect(node[key]);
-        }
-      });
-
-      const nestedKeys = ["words", "lines", "result", "results", "data", "ocr", "paragraphs", "blocks"];
-      nestedKeys.forEach((key) => {
-        if (node[key] !== undefined) {
-          collect(node[key]);
-        }
-      });
+    if (payload?.OCRExitCode === 3) {
+      throw new Error("OCR provider rate limit reached. Please retry in a moment.");
     }
-  };
 
-  collect(payload);
-  return [...new Set(textChunks)].join("\n").trim();
-}
-
-async function requestEasyOcr(imageBlob) {
-  let lastError;
-
-  for (const endpoint of EASY_OCR_ENDPOINTS) {
-    const formData = new FormData();
-    formData.append("file", imageBlob, `raveneye-${Date.now()}.png`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        body: formData,
-        signal: controller.signal
-      });
-
-      if (!response.ok) {
-        throw new Error(`OCR service error (${response.status}).`);
-      }
-
-      const payload = await response.json();
-      return extractTextFromEasyOcrResponse(payload);
-    } catch (error) {
-      lastError = error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    throw new Error("OCR provider could not extract text from this capture.");
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  throw lastError || new Error("OCR service unavailable.");
 }
 
 async function handleOCR(dataUrl, sendResponse) {
   try {
     const imageBlob = await dataUrlToBlob(dataUrl);
-    const text = await requestEasyOcr(imageBlob);
+    const text = await requestOcrSpace(imageBlob);
     sendResponse({ success: true, text });
   } catch (error) {
     console.error('[RavenEye] OCR Error:', error);
