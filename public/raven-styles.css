@@ -100,9 +100,81 @@
   pointer-events: none;
 }
 
+#raveneye-result {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 290px;
+  max-width: calc(100vw - 24px);
+  background: rgb(var(--raven-card));
+  color: rgb(var(--raven-fg));
+  border: 1px solid rgb(var(--raven-border));
+  border-radius: 12px;
+  box-shadow: var(--raven-shadow);
+  z-index: 2147483647;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.raven-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgb(var(--raven-border));
+}
+
+.raven-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.raven-close {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: rgb(var(--raven-fg));
+  border: 1px solid rgb(var(--raven-border));
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.raven-close:hover {
+  background: rgb(var(--raven-muted));
+}
+
+.raven-preview {
+  width: 100%;
+  height: 84px;
+  background: rgb(var(--raven-muted));
+  border-bottom: 1px solid rgb(var(--raven-border));
+}
+
+.raven-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.raven-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
 .raven-text-area {
   width: 100%;
-  min-height: 80px;
+  min-height: 56px;
+  max-height: 110px;
   background-color: #18181b !important;
   /* Force Dark Background */
   color: #fafafa !important;
@@ -110,9 +182,10 @@
   border: 1px solid rgb(var(--raven-border));
   border-radius: 4px;
   padding: 8px;
-  font-size: 13px;
+  font-size: 12px;
   font-family: monospace;
   resize: none;
+  overflow: auto;
   z-index: 2147483647;
 }
 
@@ -124,6 +197,32 @@
 /* ... existing code ... */
 
 /* Button contrast fixes */
+.raven-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.raven-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: 1px solid rgb(var(--raven-border));
+  background: rgb(var(--raven-muted));
+  color: rgb(var(--raven-fg));
+  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.raven-btn:hover {
+  opacity: 0.9;
+}
+
 .raven-btn.primary {
   background-color: #fafafa !important;
   /* Zinc-50 */

@@ -13,7 +13,7 @@
     "downloads"
   ],
   "host_permissions": [
-    "https://api.ocr.space/*",
+    "https://api.easyocr.org/*",
     "<all_urls>"
   ],
   "background": {

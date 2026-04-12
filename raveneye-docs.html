@@ -527,14 +527,13 @@
         <div class="setup-steps">
             <div class="step-card">
                 <div class="step-number">1</div>
-                <h3>Get Your API Key</h3>
-                <p>Register for a free OCR.space API key. No credit card required. You'll get 25,000 requests per month on the free tier.</p>
-                <p style="margin-top: 1rem;"><a href="https://ocr.space/ocrapi" target="_blank" style="color: var(--accent-violet); text-decoration: none;">Visit OCR.space</a></p>
+                <h3>Install & Pin RavenEye</h3>
+                <p>Load the extension in your browser and pin it to the toolbar for one-click access.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">2</div>
-                <h3>Configure Extension</h3>
-                <p>Click the RavenEye icon in your toolbar, paste your API key in the settings, and click Save. Your key is encrypted and stored locally in your browser.</p>
+                <h3>Open a page with text</h3>
+                <p>Go to any website, document, or visual content where text is visible. No API key setup is required.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">3</div>
@@ -553,7 +552,7 @@
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">⚡</div>
                 <h3>Lightning Fast OCR</h3>
-                <p>Extract text from any screen region in seconds. Powered by advanced OCR.space AI technology with high accuracy.</p>
+                <p>Extract text from any screen region in seconds. Powered by keyless EasyOCR service with high accuracy.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🎯</div>
@@ -563,7 +562,7 @@
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🔒</div>
                 <h3>Privacy First</h3>
-                <p>Your API key never leaves your browser. No tracking, no analytics, no data collection. Fully open source and transparent.</p>
+                <p>No API key setup, no tracking, no analytics, no data collection by RavenEye. Fully open source and transparent.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">📋</div>
@@ -591,20 +590,20 @@
             <div class="accordion">
                 <div class="accordion-item">
                     <button class="accordion-trigger" aria-expanded="false">
-                        <span>Do I need to pay for an API key?</span>
+                        <span>Do I need to create an API account?</span>
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>No. OCR.space provides a free tier with 25,000 requests per month. This is more than enough for most users. No credit card required for registration.</p>
+                        <p>No. RavenEye uses a keyless OCR endpoint, so you don't need to register, create, or manage API keys.</p>
                     </div>
                 </div>
                 <div class="accordion-item">
                     <button class="accordion-trigger" aria-expanded="false">
-                        <span>Is my API key secure?</span>
+                        <span>Do I need to save an API key in settings?</span>
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>Yes. Your API key is stored in your browser's encrypted storage (chrome.storage.sync). It never leaves your device and is never sent to our servers. The extension is fully open source so you can verify this yourself.</p>
+                        <p>No. RavenEye now works without API-key storage. You can install and start using OCR immediately.</p>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -631,7 +630,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>No. OCR processing happens on OCR.space servers, so an internet connection is required. This ensures fast processing without consuming your device's resources.</p>
+                        <p>No. OCR processing uses a cloud service endpoint, so an internet connection is required.</p>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -640,7 +639,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>OCR.space supports 30+ languages including English, Chinese, Japanese, Korean, Arabic, and most European languages. The extension automatically detects the language in most cases.</p>
+                        <p>EasyOCR-based recognition supports many major languages including English and multiple non-Latin scripts. Accuracy depends on capture quality and script complexity.</p>
                     </div>
                 </div>
             </div>
@@ -656,7 +655,7 @@
             <h3>1. Information Collection</h3>
             <p>RavenEye collects minimal information necessary for functionality:</p>
             <ul>
-                <li><strong>API Key:</strong> Your OCR.space API key is stored locally in your browser using encrypted chrome.storage.sync. It never leaves your device.</li>
+                <li><strong>No API Key Storage:</strong> RavenEye does not require or store OCR API keys.</li>
                 <li><strong>Settings:</strong> User preferences (auto-copy, image quality) are stored locally in your browser.</li>
                 <li><strong>Screen Captures:</strong> Temporary screenshots are captured for OCR processing and immediately deleted after processing completes.</li>
             </ul>
@@ -664,7 +663,7 @@
             <h3>2. Data Sharing</h3>
             <p>RavenEye shares data only with services necessary for core functionality:</p>
             <ul>
-                <li><strong>OCR.space API:</strong> Screen captures are sent to OCR.space for text extraction. Images are processed and immediately deleted by OCR.space. Review their privacy policy at <a href="https://ocr.space/privacypolicy" style="color: var(--accent-violet);">ocr.space/privacypolicy</a></li>
+                <li><strong>EasyOCR Endpoint:</strong> Screen captures are sent to the EasyOCR endpoint for text extraction. RavenEye does not store these captures on developer servers.</li>
                 <li><strong>No Third-Party Analytics:</strong> We do not use Google Analytics, tracking pixels, or any third-party analytics services.</li>
             </ul>
 
@@ -681,7 +680,7 @@
                 <li><strong>activeTab:</strong> Required to capture visible tab content for OCR processing</li>
                 <li><strong>tabs:</strong> Required to access current tab for screen capture functionality</li>
                 <li><strong>scripting:</strong> Required to inject content script for overlay UI during selection</li>
-                <li><strong>storage:</strong> Required to save user settings and API key securely in browser</li>
+                <li><strong>storage:</strong> Required to save user settings in browser</li>
                 <li><strong>clipboardWrite:</strong> Required to copy extracted text to clipboard when requested</li>
                 <li><strong>downloads:</strong> Required to save extracted text as .txt files when requested</li>
                 <li><strong>host_permissions:</strong> Required to capture screen content from any website you visit</li>
@@ -709,20 +708,17 @@
                 <p><strong>Extension not activating?</strong></p>
                 <p>Check if keyboard shortcut conflicts exist in <code>edge://extensions/shortcuts</code>. Try reassigning the shortcut if needed.</p>
                 
-                <p><strong>API key not saving?</strong></p>
-                <p>Click the Save button after entering your key. Wait 1-2 seconds before closing the popup. Verify the key is masked (showing dots) after save.</p>
+                <p><strong>OCR request failed?</strong></p>
+                <p>Check your internet connection and retry. Some networks may block OCR service traffic.</p>
                 
                 <p><strong>OCR results are empty?</strong></p>
-                <p>Ensure you're selecting a region with actual text. Increase zoom level for better capture quality. Check if your API key is valid at OCR.space dashboard.</p>
-                
-                <p><strong>Invalid API key error?</strong></p>
-                <p>Verify you copied the entire key from your email. Check if you've exceeded the 25,000 monthly request limit. Register for a new free key if needed.</p>
+                <p>Ensure you're selecting a region with actual text. Increase zoom level for better capture quality and contrast.</p>
             </div>
 
             <h3>Contact & Resources</h3>
             <ul>
                 <li><strong>GitHub Issues:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye/issues" target="_blank" style="color: var(--accent-violet);">Report bugs or request features</a></li>
-                <li><strong>OCR.space Support:</strong> <a href="https://ocr.space/contact" target="_blank" style="color: var(--accent-violet);">API-related questions</a></li>
+                <li><strong>Service Endpoint:</strong> <a href="https://api.easyocr.org/" target="_blank" style="color: var(--accent-violet);">EasyOCR API endpoint</a></li>
                 <li><strong>Source Code:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank" style="color: var(--accent-violet);">View on GitHub</a></li>
             </ul>
         </div>
@@ -747,7 +743,7 @@
                 <h4>Legal</h4>
                 <ul class="footer-links">
                     <li><a href="#privacy">Privacy Policy</a></li>
-                    <li><a href="https://ocr.space/privacypolicy" target="_blank">OCR.space Privacy</a></li>
+                    <li><a href="privacy-policy.html" target="_blank">Full Privacy Policy</a></li>
                     <li><a href="#support">Support</a></li>
                 </ul>
             </div>

@@ -128,54 +128,107 @@ async function handleCapture(message, sender, sendResponse) {
   }
 }
 
-async function handleOCR(dataUrl, sendResponse) {
-  try {
-    // Retrieve API key from storage
-    const settings = await chrome.storage.sync.get({ ocrApiKey: '' });
-    const apiKey = settings.ocrApiKey.trim();
+const EASY_OCR_ENDPOINTS = [
+  "https://api.easyocr.org/ocr"
+];
 
-    if (!apiKey) {
-      sendResponse({ 
-        success: false, 
-        error: 'API key not configured. Please add your OCR.space API key in the extension settings. Get a free key at https://ocr.space/ocrapi' 
-      });
+async function dataUrlToBlob(dataUrl) {
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
+    throw new Error("Invalid capture data.");
+  }
+
+  const response = await fetch(dataUrl);
+  if (!response.ok) {
+    throw new Error("Failed to prepare capture image.");
+  }
+
+  return response.blob();
+}
+
+function extractTextFromEasyOcrResponse(payload) {
+  const textChunks = [];
+
+  const collect = (node) => {
+    if (!node) return;
+
+    if (typeof node === "string") {
+      const cleaned = node.trim();
+      if (cleaned) {
+        textChunks.push(cleaned);
+      }
       return;
     }
 
-    const formData = new FormData();
-    formData.append('apikey', apiKey);
-    formData.append('base64Image', dataUrl);
-    formData.append('language', 'eng');
-    formData.append('isOverlayRequired', 'false');
-    formData.append('scale', 'true');
-    formData.append('OCREngine', '2');
-    formData.append('filetype', dataUrl.startsWith('data:image/jpeg') ? 'JPG' : 'PNG');
-
-    const response = await fetch('https://api.ocr.space/parse/image', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+    if (Array.isArray(node)) {
+      node.forEach(collect);
+      return;
     }
 
-    const result = await response.json();
-
-    if (result.OCRExitCode === 1 && result.ParsedResults?.length > 0) {
-      sendResponse({ success: true, text: result.ParsedResults[0].ParsedText.trim() });
-    } else if (result.OCRExitCode === 99) {
-      // Invalid API key
-      sendResponse({ 
-        success: false, 
-        error: 'Invalid API key. Please check your OCR.space API key in settings.' 
+    if (typeof node === "object") {
+      const directKeys = ["text", "word", "lineText", "ParsedText"];
+      directKeys.forEach((key) => {
+        if (typeof node[key] === "string") {
+          collect(node[key]);
+        }
       });
-    } else {
-      sendResponse({ success: true, text: '' }); // No text found
+
+      const nestedKeys = ["words", "lines", "result", "results", "data", "ocr", "paragraphs", "blocks"];
+      nestedKeys.forEach((key) => {
+        if (node[key] !== undefined) {
+          collect(node[key]);
+        }
+      });
     }
+  };
+
+  collect(payload);
+  return [...new Set(textChunks)].join("\n").trim();
+}
+
+async function requestEasyOcr(imageBlob) {
+  let lastError;
+
+  for (const endpoint of EASY_OCR_ENDPOINTS) {
+    const formData = new FormData();
+    formData.append("file", imageBlob, `raveneye-${Date.now()}.png`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
+
+      if (!response.ok) {
+        throw new Error(`OCR service error (${response.status}).`);
+      }
+
+      const payload = await response.json();
+      return extractTextFromEasyOcrResponse(payload);
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  throw lastError || new Error("OCR service unavailable.");
+}
+
+async function handleOCR(dataUrl, sendResponse) {
+  try {
+    const imageBlob = await dataUrlToBlob(dataUrl);
+    const text = await requestEasyOcr(imageBlob);
+    sendResponse({ success: true, text });
   } catch (error) {
     console.error('[RavenEye] OCR Error:', error);
-    sendResponse({ success: false, error: error.message });
+    sendResponse({
+      success: false,
+      error: error.message || "OCR failed. Please check your connection and try again."
+    });
   }
 }
 

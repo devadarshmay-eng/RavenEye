@@ -73,7 +73,6 @@
         <h2>2. Data Stored Locally on Your Device</h2>
         <p>The extension stores the following data <strong>only on your device</strong> using Chrome's secure storage API (chrome.storage.sync):</p>
         <ul>
-            <li><strong>OCR.space API Key:</strong> Your personal API key is encrypted and stored locally. It is never transmitted to us.</li>
             <li><strong>User Preferences:</strong> Visual settings including:
                 <ul>
                     <li>Dim level intensity</li>
@@ -90,16 +89,14 @@
         <h2>3. Third-Party Services</h2>
         <p>When you activate the OCR feature and capture a screenshot, RavenEye sends the captured image to:</p>
         
-        <h3>OCR.space API</h3>
+        <h3>EasyOCR Endpoint</h3>
         <ul>
             <li><strong>Purpose:</strong> To perform Optical Character Recognition (convert image to text)</li>
             <li><strong>Data Sent:</strong> Screenshot image only (temporary)</li>
-            <li><strong>Your API Key:</strong> Used to authenticate your request with OCR.space</li>
-            <li><strong>Data Retention:</strong> OCR.space processes images in real-time and does not permanently store them</li>
-            <li><strong>Privacy Policy:</strong> <a href="https://ocr.space/privacypolicy" target="_blank">https://ocr.space/privacypolicy</a></li>
+            <li><strong>Authentication:</strong> No API key is required from the user</li>
+            <li><strong>Data Retention:</strong> RavenEye does not persist captures on developer-controlled servers</li>
+            <li><strong>Endpoint:</strong> <a href="https://api.easyocr.org/" target="_blank">https://api.easyocr.org/</a></li>
         </ul>
-        
-        <p><strong>Important:</strong> You control your own API key and quota. We do not share API credentials with other users.</p>
         
         <h2>4. Permissions Explained</h2>
         <p>RavenEye requests the following browser permissions. Here's why each is necessary:</p>
@@ -107,10 +104,10 @@
             <li><strong>activeTab:</strong> Required to capture screenshots of the current tab when you activate the extension</li>
             <li><strong>tabs:</strong> Required to query which tab is active</li>
             <li><strong>scripting:</strong> Required to inject the visual capture interface into web pages after you trigger capture</li>
-            <li><strong>storage:</strong> Required to save your settings and API key locally in encrypted browser storage</li>
+            <li><strong>storage:</strong> Required to save your settings locally in encrypted browser storage</li>
             <li><strong>clipboardWrite:</strong> Required to copy extracted text to your clipboard (when auto-copy is enabled)</li>
             <li><strong>downloads:</strong> Required to save captured images to your Downloads folder (when auto-save is enabled)</li>
-            <li><strong>https://api.ocr.space/* (host permission):</strong> Required only to send your selected image to OCR.space for text extraction</li>
+            <li><strong>https://api.easyocr.org/* (host permission):</strong> Required only to send your selected image for OCR text extraction</li>
         </ul>
         
         <h2>5. Analytics & Tracking</h2>
@@ -134,21 +131,19 @@
             <li>Use your data for marketing</li>
             <li>Collect your browsing history</li>
         </ul>
-        <p>Your API key and settings remain on your device. The only data transmission is the screenshot you choose to process via OCR.space's API.</p>
+        <p>Your settings remain on your device. The only data transmission is the screenshot you choose to process through the OCR endpoint.</p>
         
         <h2>7. Data Security</h2>
         <ul>
-            <li>Your API key is stored using Chrome's secure storage API with encryption</li>
-            <li>All network requests to OCR.space use HTTPS (encrypted communication)</li>
-            <li>Screenshots are sent directly from your browser to OCR.space (we never see them)</li>
+            <li>All network requests to OCR services use HTTPS (encrypted communication)</li>
+            <li>Screenshots are sent directly from your browser to the OCR endpoint</li>
             <li>No data is stored on our servers (we don't have any servers)</li>
         </ul>
         
         <h2>8. Your Rights & Control</h2>
         <p>You have complete control over your data:</p>
         <ul>
-            <li><strong>Delete Your Data:</strong> Uninstall the extension to remove all locally stored settings and API key</li>
-            <li><strong>Revoke API Key:</strong> Log in to OCR.space to delete or regenerate your API key</li>
+            <li><strong>Delete Your Data:</strong> Uninstall the extension to remove all locally stored settings</li>
             <li><strong>Clear Settings:</strong> Remove and reinstall the extension to reset all preferences</li>
             <li><strong>Disable Features:</strong> Toggle off auto-copy or auto-save at any time in settings</li>
         </ul>
@@ -170,7 +165,7 @@
         <ul>
             <li>Review the entire source code on GitHub: <a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank">https://github.com/devadarshmay-eng/RavenEye</a></li>
             <li>Verify that we do not collect any data</li>
-            <li>Audit how your API key is stored and used</li>
+            <li>Audit how OCR requests are performed</li>
             <li>Contribute improvements or report security issues</li>
         </ul>
         
@@ -190,8 +185,8 @@
         <p><strong>In plain English:</strong></p>
         <ol>
             <li>We don't collect your personal data - everything stays on your device</li>
-            <li>Your API key is stored securely in your browser</li>
-            <li>Screenshots are sent to OCR.space for processing (not to us)</li>
+            <li>No API key setup is required for RavenEye usage</li>
+            <li>Screenshots are sent to an OCR endpoint for processing (not to us)</li>
             <li>We don't track you, use analytics, or serve ads</li>
             <li>You can delete all data by uninstalling the extension</li>
             <li>The code is open source - you can verify everything</li>

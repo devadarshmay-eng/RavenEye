@@ -415,49 +415,11 @@
       </div>
     </div>
 
-    <!-- API Configuration Section - Collapsible -->
-    <div id="apiConfigSection">
-      <div class="section-title" style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" id="apiSectionToggle">
-        <span>API Configuration</span>
-        <span id="apiToggleIcon" style="font-size: 18px; transition: transform 0.2s;">▼</span>
-      </div>
-
-      <div id="apiConfigContent" style="overflow: hidden; transition: max-height 0.3s ease;">
-        <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 12px;">
-          <div class="setting-info" style="width: 100%;">
-            <div class="icon-box">🔑</div>
-            <div class="setting-text" style="flex: 1;">
-              <span class="setting-label">OCR.space API Key</span>
-              <span class="setting-desc">Required for text extraction</span>
-            </div>
-          </div>
-          <div style="width: 100%; position: relative;">
-            <input type="password" id="apiKeyInput" placeholder="Enter your API key" 
-                   style="width: 100%; padding: 8px 32px 8px 12px; background: var(--surface-highlight); border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); font-size: 12px; font-family: monospace;">
-            <button id="toggleApiKeyVisibility" type="button"
-                    style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 14px;">
-              👁️
-            </button>
-          </div>
-          <button id="saveApiKey" type="button"
-                  style="width: 100%; padding: 10px; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-            Save API Key
-          </button>
-          <div id="apiKeySaveStatus" style="width: 100%; font-size: 11px; text-align: center; min-height: 16px; color: var(--text-muted);"></div>
-          <div style="width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border);">
-            <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
-              <span style="color: var(--accent);">ℹ️</span>
-              <span>Need an API key? Get one free at OCR.space</span>
-            </div>
-            <a href="https://ocr.space/ocrapi" target="_blank" 
-               style="font-size: 12px; font-weight: 500; color: var(--accent); text-decoration: none; padding: 6px 12px; background: var(--surface-highlight); border-radius: 4px; border: 1px solid var(--accent); text-align: center; transition: all 0.2s;">
-              Get Free API Key →
-            </a>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">
-              Your key is stored securely and never leaves your browser
-            </div>
-          </div>
-        </div>
+    <div class="section-title" style="margin-top: 20px;">OCR Engine</div>
+    <div style="padding: 10px 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--text-main);">Keyless OCR Enabled</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+        RavenEye runs OCR without API keys. Just capture and extract.
       </div>
     </div>
 

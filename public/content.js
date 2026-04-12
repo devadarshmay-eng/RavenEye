@@ -264,7 +264,11 @@
 
     // --- Auto-Hide Logic ---
     let hideTimer;
-    const AUTO_HIDE_DELAY = 4000; // 4 seconds
+    const AUTO_HIDE_DELAY = 3500; // 3.5 seconds
+
+    function stopHideTimer() {
+      clearTimeout(hideTimer);
+    }
 
     function startHideTimer() {
       clearTimeout(hideTimer);
@@ -282,18 +286,33 @@
       }, AUTO_HIDE_DELAY);
     }
 
+    function resumeHideTimerIfIdle() {
+      if (!resultPopup || !document.body.contains(resultPopup)) {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      if (resultPopup.matches(':hover') || (activeElement && resultPopup.contains(activeElement))) {
+        return;
+      }
+
+      startHideTimer();
+    }
+
     // Start timer initially
     startHideTimer();
 
-    // Pause on hover
-    resultPopup.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    // Pause on interaction
+    resultPopup.addEventListener('mouseenter', stopHideTimer);
     resultPopup.addEventListener('mouseleave', startHideTimer);
-    resultPopup.addEventListener('touchstart', () => clearTimeout(hideTimer));
-    resultPopup.addEventListener('touchend', startHideTimer);
+    resultPopup.addEventListener('focusin', stopHideTimer);
+    resultPopup.addEventListener('focusout', () => setTimeout(resumeHideTimerIfIdle, 0));
+    resultPopup.addEventListener('touchstart', stopHideTimer, { passive: true });
+    resultPopup.addEventListener('touchend', () => setTimeout(resumeHideTimerIfIdle, 800), { passive: true });
 
     // Event Bindings
     resultPopup.querySelector('.raven-close').onclick = () => {
-      clearTimeout(hideTimer);
+      stopHideTimer();
       resultPopup.remove();
       resultPopup = null;
     };

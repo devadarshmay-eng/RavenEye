@@ -28,7 +28,7 @@ Think of it like the Windows Snipping Tool — but instead of saving a screensho
 | Feature | Description |
 |---|---|
 | 🖱️ **Click-drag selection** | Draw any rectangle on screen to capture a region |
-| ⚡ **Instant OCR** | Powered by [OCR.space API](https://ocr.space/) for fast, accurate extraction |
+| ⚡ **Instant OCR** | Powered by keyless EasyOCR service for fast, accurate extraction |
 | 📋 **Auto-copy to clipboard** | Text is copied the moment OCR completes |
 | 💾 **Save image** | Optionally download the captured region as a PNG |
 | ⌨️ **Keyboard shortcut** | `Alt+Shift+E` |
@@ -124,7 +124,7 @@ RavenEye/
 | Layer | Technology |
 |---|---|
 | Extension API | Chrome Manifest V3 |
-| OCR Engine | [OCR.space API](https://ocr.space/) |
+| OCR Engine | EasyOCR keyless API (`https://api.easyocr.org/ocr`) |
 | Screen Capture | `chrome.tabs.captureVisibleTab` |
 | Storage | `chrome.storage.sync` |
 | Settings UI | React 18 + TypeScript + Vite |
