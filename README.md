@@ -6,7 +6,7 @@
 
 A Chrome extension that extracts text from any region you select on screen — powered by OCR.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
+[![Version](https://img.shields.io/badge/version-1.0.1-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye/blob/main/LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-V3-10b981?style=flat-square&logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave%20%7C%20Edge-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
@@ -79,6 +79,17 @@ After build completes, zip the contents of `dist-extension/` and upload that zip
 
 ---
 
+## 🌐 Deploy documentation site (GitHub Pages)
+
+`raveneye-docs.html` and `privacy-policy.html` are deployed by `.github/workflows/deploy-docs.yml`.
+
+1. Push the latest `main` branch to GitHub.
+2. In repository **Settings → Pages**, set **Build and deployment** to **GitHub Actions**.
+3. Trigger the workflow (push to `main` or run it manually from Actions).
+4. Use the resulting Pages URL for Edge listing docs/privacy links.
+
+---
+
 ## ⚙️ Settings
 
 | Setting | Default | Description |
@@ -111,7 +122,8 @@ RavenEye/
 ├── scripts/                # Build / helper scripts
 ├── .github/
 │   └── workflows/
-│       └── release.yml     # Automated release workflow
+│       ├── release.yml     # Tag-based extension release workflow
+│       └── deploy-docs.yml # GitHub Pages docs deployment workflow
 ├── public/
 ├── README.md
 └── LICENSE
