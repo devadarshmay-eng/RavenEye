@@ -85,8 +85,9 @@ After build completes, zip the contents of `dist-extension/` and upload that zip
 
 1. Push the latest `main` branch to GitHub.
 2. Trigger the workflow (push to `main` or run it manually from Actions).
-3. Open the workflow run summary and copy the generated Pages URL.
-4. Use that URL for Edge listing docs/privacy links.
+3. If the run warns that Pages is not enabled, set **Settings → Pages → Build and deployment = GitHub Actions** once, then rerun.
+4. Open the workflow run summary and copy the generated Pages URL.
+5. Use that URL for Edge listing docs/privacy links.
 
 ---
 

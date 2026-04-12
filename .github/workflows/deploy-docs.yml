@@ -22,27 +22,49 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pages_ready: ${{ steps.pages_gate.outputs.ready }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
+      - name: Setup Pages (best effort)
+        id: pages
+        continue-on-error: true
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
+      - name: Determine deployment readiness
+        id: pages_gate
+        run: |
+          if [ "${{ steps.pages.outcome }}" = "success" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build docs artifact
+        if: steps.pages_gate.outputs.ready == 'true'
         run: |
           mkdir -p _site
           cp raveneye-docs.html _site/index.html
           cp privacy-policy.html _site/privacy-policy.html
 
       - name: Upload artifact
+        if: steps.pages_gate.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
+      - name: Pages setup required
+        if: steps.pages_gate.outputs.ready != 'true'
+        run: |
+          echo "::warning::GitHub Pages is not enabled for Actions in this repository."
+          echo "::warning::Enable it in Settings > Pages, then rerun this workflow."
+
   deploy:
+    if: needs.build.outputs.pages_ready == 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
