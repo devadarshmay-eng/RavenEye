@@ -84,9 +84,9 @@ After build completes, zip the contents of `dist-extension/` and upload that zip
 `raveneye-docs.html` and `privacy-policy.html` are deployed by `.github/workflows/deploy-docs.yml`.
 
 1. Push the latest `main` branch to GitHub.
-2. In repository **Settings → Pages**, set **Build and deployment** to **GitHub Actions**.
-3. Trigger the workflow (push to `main` or run it manually from Actions).
-4. Use the resulting Pages URL for Edge listing docs/privacy links.
+2. Trigger the workflow (push to `main` or run it manually from Actions).
+3. Open the workflow run summary and copy the generated Pages URL.
+4. Use that URL for Edge listing docs/privacy links.
 
 ---
 
