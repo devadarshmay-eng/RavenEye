@@ -34,9 +34,7 @@ function App() {
 
     // Load settings
     useEffect(() => {
-        // @ts-ignore - Chrome API
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-            // @ts-ignore
             chrome.storage.sync.get(DEFAULT_SETTINGS, (items: Settings) => {
                 setSettings(items)
                 setLoading(false)
@@ -51,9 +49,7 @@ function App() {
         setSettings(newSettings)
         applyTheme(newSettings.theme)
 
-        // @ts-ignore
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-            // @ts-ignore
             chrome.storage.sync.set(newSettings, () => {
                 // Optional: show toast only on specific actions if needed
             })
@@ -67,9 +63,7 @@ function App() {
     }
 
     const handleCapture = () => {
-        // @ts-ignore
         if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-            // @ts-ignore
             chrome.runtime.sendMessage({ action: 'ACTIVATE_FROM_POPUP' }, () => {
                 window.close()
             })
@@ -95,7 +89,7 @@ function App() {
                     </div>
                 </div>
                 <div className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border font-mono">
-                    v1.1
+                    v1.0.1
                 </div>
             </div>
 
@@ -110,7 +104,7 @@ function App() {
                         Activate Capture
                     </Button>
                     <p className="text-[10px] text-muted-foreground">
-                        or press <kbd className="px-1.5 py-0.5 rounded bg-muted border font-mono text-foreground">Ctrl+Shift+E</kbd>
+                        or press <kbd className="px-1.5 py-0.5 rounded bg-muted border font-mono text-foreground">Alt+Shift+E</kbd>
                     </p>
                 </div>
 

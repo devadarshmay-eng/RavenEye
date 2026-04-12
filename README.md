@@ -1,67 +1,81 @@
+<div align="center">
+
 # 🦅 RavenEye
 
-> **Select. Extract. Done.** — A browser extension that extracts text from any region you select on screen using OCR.
+**Select. Extract. Done.**
 
-![RavenEye Banner](docs/banner.png)
+A Chrome extension that extracts text from any region you select on screen — powered by OCR.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-purple)](https://github.com/yourusername/raveneye/releases)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
+[![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye/blob/main/LICENSE)
+[![Manifest](https://img.shields.io/badge/manifest-V3-10b981?style=flat-square&logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/)
+[![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave%20%7C%20Edge-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
 
----
-
-## ✨ What is RavenEye?
-
-RavenEye is a Chrome/Brave/Edge browser extension that lets you **draw a selection rectangle** on any part of your screen and instantly **extracts all text** from that region using OCR (Optical Character Recognition).
-
-Think of it like Windows Snipping Tool — but instead of saving a screenshot, it reads the text inside and copies it to your clipboard automatically.
+</div>
 
 ---
 
-## 🚀 Features
+## 🔍 What is RavenEye?
 
-- **Click-drag selection** — Draw any rectangle on screen to capture text
-- **Instant OCR** — Powered by OCR.space API for fast, accurate text extraction
-- **Auto-copy to clipboard** — Text is copied the moment OCR completes
-- **Save image** — Optionally download the captured region as PNG
-- **Keyboard shortcut** — `Ctrl+Shift+E` (Windows/Linux) / `Cmd+Shift+E` (Mac)
-- **Customizable dim & blur** — Control how the screen looks during selection
-- **7 accent colors** — Personalize the UI to your taste
-- **Smart compression** — Automatically compresses large captures for optimal OCR
+**RavenEye** is a browser extension for Chrome, Brave, and Edge that lets you **draw a selection rectangle** over any part of your screen and instantly **extracts all the text** from that region using OCR (Optical Character Recognition).
+
+Think of it like the Windows Snipping Tool — but instead of saving a screenshot, it **reads the text inside** and copies it to your clipboard automatically.
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🖱️ **Click-drag selection** | Draw any rectangle on screen to capture a region |
+| ⚡ **Instant OCR** | Powered by [OCR.space API](https://ocr.space/) for fast, accurate extraction |
+| 📋 **Auto-copy to clipboard** | Text is copied the moment OCR completes |
+| 💾 **Save image** | Optionally download the captured region as a PNG |
+| ⌨️ **Keyboard shortcut** | `Alt+Shift+E` |
+| 🌑 **Customizable dim & blur** | Control how the screen looks during selection |
+| 🎨 **7 accent colors** | Personalize the UI to your taste |
+| 🗜️ **Smart compression** | Auto-compresses large captures for optimal OCR |
 
 ---
 
 ## 📸 How It Works
 
 ```
-1. Press Ctrl+Shift+E  (or click the extension icon → Activate Capture)
-2. Screen dims
-3. Draw a rectangle over any text on screen
-4. OCR extracts text from the selection
-5. Text is copied to clipboard + shown in popup
+1.  Press Alt+Shift+E  — or click the extension icon → Activate Capture
+2.  The screen dims
+3.  Draw a rectangle over any text on screen
+4.  OCR extracts text from the selection
+5.  Text is copied to clipboard + shown in the popup
 ```
 
 ---
 
 ## 🔧 Installation
 
+> For local testing, load `public/` directly. For submission, build and package `dist-extension/`.
+
 ```bash
 # 1. Clone this repo
-git clone https://github.com/yourusername/raveneye.git
-cd raveneye
-
-# 2. Open your browser and navigate to:
-chrome://extensions/       # Chrome
-brave://extensions/        # Brave
-edge://extensions/         # Edge
-
-# 3. Enable "Developer mode" (top right toggle)
-
-# 4. Click "Load unpacked"
-
-# 5. Select the /extension folder from this repo
-
-# 6. Done! 🦅 RavenEye is now in your toolbar
+git clone https://github.com/devadarshmay-eng/RavenEye.git
+cd RavenEye
 ```
+
+Then load it in your browser:
+
+1. Navigate to `chrome://extensions/` (or `brave://extensions/` / `edge://extensions/`)
+2. Enable **Developer mode** (toggle in the top-right)
+3. Click **Load unpacked**
+4. Select the **`public/`** folder from this repo
+5. Done! 🦅 RavenEye appears in your toolbar
+
+### 📦 Build release package (Edge Add-ons)
+
+```bash
+npm install
+npm run build
+```
+
+After build completes, zip the contents of `dist-extension/` and upload that zip to Partner Center.
 
 ---
 
@@ -80,20 +94,25 @@ edge://extensions/         # Edge
 ## 🗂️ Project Structure
 
 ```
-raveneye/
-├── extension/
-│   ├── manifest.json       # Extension config (MV3)
-│   ├── background.js       # Service worker — shortcut + capture
-│   ├── content.js          # Overlay, selection, OCR logic
-│   ├── content.css         # Selection UI styles
-│   ├── popup.html          # Settings popup
+RavenEye/
+├── public/                 # Source extension files (load this for local unpacked testing)
+│   ├── manifest.json       # Extension config (Manifest V3)
+│   ├── background.js       # Service worker — shortcut & capture logic
+│   ├── content.js          # Overlay, selection UI, OCR pipeline
+│   ├── raven-styles.css    # Selection overlay styles
+│   ├── popup.html          # Settings popup UI
 │   ├── popup.js            # Settings logic
 │   └── icons/              # Extension icons (16, 32, 48, 128px)
-├── docs/
-│   └── roadmap.md
+├── dist-extension/         # Submission-ready extension output (generated by `npm run build`)
+├── src/                    # React + Vite settings app (UI components)
+│   ├── App.tsx
+│   ├── components/
+│   └── index.css
+├── scripts/                # Build / helper scripts
 ├── .github/
 │   └── workflows/
-│       └── release.yml     # Auto-release workflow
+│       └── release.yml     # Automated release workflow
+├── public/
 ├── README.md
 └── LICENSE
 ```
@@ -104,11 +123,12 @@ raveneye/
 
 | Layer | Technology |
 |---|---|
-| Extension API | Chrome MV3 (Manifest V3) |
+| Extension API | Chrome Manifest V3 |
 | OCR Engine | [OCR.space API](https://ocr.space/) |
 | Screen Capture | `chrome.tabs.captureVisibleTab` |
 | Storage | `chrome.storage.sync` |
-| UI | Vanilla HTML/CSS/JS |
+| Settings UI | React 18 + TypeScript + Vite |
+| Styling | Tailwind CSS + Radix UI |
 
 ---
 
@@ -117,9 +137,22 @@ raveneye/
 - [ ] Multi-language OCR support
 - [ ] History of recent captures
 - [ ] Firefox support (WebExtensions API)
-- [ ] AI-powered text cleanup (fix OCR errors)
+- [ ] AI-powered text cleanup (fix OCR errors automatically)
 - [ ] Region annotation before capture
 - [ ] PDF text extraction mode
+
+---
+
+## ⚠️ Disclaimer
+
+RavenEye relies on third-party OCR technology to extract text from screen captures. While it aims to be as accurate as possible, **results may not always be 100% correct** — OCR can make errors, especially with:
+
+- Stylized fonts, handwriting, or decorative text
+- Low-contrast or very small text
+- Heavily curved, blurred, or rotated content
+- Non-Latin scripts or rare languages
+
+> **Always review the extracted text before relying on it for critical use.** RavenEye is a productivity aid, not a guaranteed transcript.
 
 ---
 
@@ -131,4 +164,6 @@ MIT — see [LICENSE](LICENSE) for details.
 
 <div align="center">
   <b>🦅 RavenEye</b> — See everything. Capture anything.
+  <br/><br/>
+  Made with ❤️ by <a href="https://github.com/devadarshmay-eng">devadarshmay-eng</a>
 </div>

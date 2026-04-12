@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RavenEye - OCR Screen Capture Extension</title>
+    <meta name="description" content="Select any region on screen and extract text instantly. Smart OCR-powered text capture for the modern browser.">
+    <style>
+        :root {
+            --bg-primary: #000000;
+            --bg-surface: #0a0a0a;
+            --bg-elevated: #141414;
+            --text-primary: #FFFFFF;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent-violet: #7D39EB;
+            --accent-violet-hover: #9352f5;
+            --accent-lime: #C6FF33;
+            --accent-lime-hover: #d4ff5c;
+            --border: #222222;
+            --border-focus: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .nav-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-brand span {
+            color: var(--accent-violet);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a.active {
+            color: var(--accent-violet);
+        }
+
+        .hero {
+            padding: 120px 2rem 80px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-surface) 100%);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero .highlight {
+            color: var(--accent-violet);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-violet);
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-violet-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(125, 57, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-violet);
+            background: var(--bg-surface);
+        }
+
+        .section {
+            padding: 80px 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+        }
+
+        .setup-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .step-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            border-color: var(--accent-violet);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-violet);
+            color: var(--text-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .step-card code {
+            background: var(--bg-elevated);
+            color: var(--accent-lime);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .accordion {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-trigger {
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .accordion-trigger:hover {
+            background: var(--bg-elevated);
+        }
+
+        .accordion-trigger[aria-expanded="true"] {
+            background: var(--bg-elevated);
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s;
+            color: var(--text-secondary);
+        }
+
+        .accordion-trigger[aria-expanded="true"] .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .accordion-content.active {
+            max-height: 500px;
+            padding: 0 1.5rem 1.25rem;
+        }
+
+        .accordion-content p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            overflow-x: auto;
+        }
+
+        .code-block .keyword {
+            color: var(--accent-violet);
+        }
+
+        .code-block .string {
+            color: var(--accent-lime);
+        }
+
+        .privacy-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .privacy-content h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+
+        .privacy-content p,
+        .privacy-content li {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .privacy-content ul {
+            list-style-position: inside;
+            margin-left: 1rem;
+        }
+
+        .privacy-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-violet);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 2rem auto 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .section {
+                padding: 60px 1.5rem;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .setup-steps,
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .text-violet {
+            color: var(--accent-violet);
+        }
+
+        .text-lime {
+            color: var(--accent-lime);
+        }
+
+        .border-left-violet {
+            border-left: 3px solid var(--accent-violet);
+            padding-left: 1rem;
+        }
+
+        .border-left-lime {
+            border-left: 3px solid var(--accent-lime);
+            padding-left: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="#home" class="nav-brand">Raven<span>Eye</span></a>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#setup">Setup</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#privacy">Privacy</a></li>
+                <li><a href="#support">Support</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Screen to Text in <span class="highlight">Seconds</span></h1>
+            <p>Select any region on your screen and extract text instantly with powerful OCR technology. Built for developers, researchers, and power users.</p>
+            <div class="cta-group">
+                <a href="https://ocr.space/ocrapi" target="_blank" class="btn btn-primary">Get Free API Key</a>
+                <a href="#setup" class="btn btn-secondary">Quick Setup Guide</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="setup" class="section">
+        <div class="section-header">
+            <h2>Get Started in 3 Steps</h2>
+            <p>Complete setup takes less than 2 minutes</p>
+        </div>
+        <div class="setup-steps">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Get Your API Key</h3>
+                <p>Register for a free OCR.space API key. No credit card required. You'll get 25,000 requests per month on the free tier.</p>
+                <p style="margin-top: 1rem;"><a href="https://ocr.space/ocrapi" target="_blank" style="color: var(--accent-violet); text-decoration: none;">Visit OCR.space</a></p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Configure Extension</h3>
+                <p>Click the RavenEye icon in your toolbar, paste your API key in the settings, and click Save. Your key is encrypted and stored locally in your browser.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Start Capturing</h3>
+                <p>Press <code>Alt+Shift+E</code> to activate. Click and drag to select any text region on your screen.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="section">
+        <div class="section-header">
+            <h2>Powerful Features</h2>
+            <p>Everything you need for seamless text extraction</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">⚡</div>
+                <h3>Lightning Fast OCR</h3>
+                <p>Extract text from any screen region in seconds. Powered by advanced OCR.space AI technology with high accuracy.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🎯</div>
+                <h3>Precision Selection</h3>
+                <p>Click and drag to select any area. Works with PDFs, images, videos, locked documents, and any visual content.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🔒</div>
+                <h3>Privacy First</h3>
+                <p>Your API key never leaves your browser. No tracking, no analytics, no data collection. Fully open source and transparent.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">📋</div>
+                <h3>One-Click Copy</h3>
+                <p>Instantly copy extracted text to clipboard. Auto-copy option available for faster workflow integration.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">💾</div>
+                <h3>Save as Text File</h3>
+                <p>Download extracted text as .txt files with timestamps. Perfect for archiving and documentation.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">⌨️</div>
+                <h3>Keyboard Shortcuts</h3>
+                <p>Quick access with Alt+Shift+E. You can also customize shortcuts in browser extension settings.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="section">
+        <div class="section-header">
+            <h2>Frequently Asked Questions</h2>
+        </div>
+        <div class="faq-container">
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-trigger" aria-expanded="false">
+                        <span>Do I need to pay for an API key?</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>No. OCR.space provides a free tier with 25,000 requests per month. This is more than enough for most users. No credit card required for registration.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger" aria-expanded="false">
+                        <span>Is my API key secure?</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>Yes. Your API key is stored in your browser's encrypted storage (chrome.storage.sync). It never leaves your device and is never sent to our servers. The extension is fully open source so you can verify this yourself.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger" aria-expanded="false">
+                        <span>What file formats are supported?</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>RavenEye captures what's visible on your screen, so it works with any format: PDFs, images (JPG, PNG, WebP), videos, locked documents, scanned files, and even text rendered in canvas or WebGL.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger" aria-expanded="false">
+                        <span>How accurate is the OCR?</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>OCR accuracy depends on image quality. For clear, high-resolution text, accuracy is typically 95%+. For best results, capture at higher zoom levels and ensure good contrast between text and background.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger" aria-expanded="false">
+                        <span>Can I use this offline?</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>No. OCR processing happens on OCR.space servers, so an internet connection is required. This ensures fast processing without consuming your device's resources.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-trigger" aria-expanded="false">
+                        <span>What languages are supported?</span>
+                        <span class="accordion-icon">▼</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p>OCR.space supports 30+ languages including English, Chinese, Japanese, Korean, Arabic, and most European languages. The extension automatically detects the language in most cases.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="privacy" class="section">
+        <div class="section-header">
+            <h2>Privacy Policy</h2>
+            <p>Effective Date: January 1, 2026</p>
+        </div>
+        <div class="privacy-content">
+            <h3>1. Information Collection</h3>
+            <p>RavenEye collects minimal information necessary for functionality:</p>
+            <ul>
+                <li><strong>API Key:</strong> Your OCR.space API key is stored locally in your browser using encrypted chrome.storage.sync. It never leaves your device.</li>
+                <li><strong>Settings:</strong> User preferences (auto-copy, image quality) are stored locally in your browser.</li>
+                <li><strong>Screen Captures:</strong> Temporary screenshots are captured for OCR processing and immediately deleted after processing completes.</li>
+            </ul>
+
+            <h3>2. Data Sharing</h3>
+            <p>RavenEye shares data only with services necessary for core functionality:</p>
+            <ul>
+                <li><strong>OCR.space API:</strong> Screen captures are sent to OCR.space for text extraction. Images are processed and immediately deleted by OCR.space. Review their privacy policy at <a href="https://ocr.space/privacypolicy" style="color: var(--accent-violet);">ocr.space/privacypolicy</a></li>
+                <li><strong>No Third-Party Analytics:</strong> We do not use Google Analytics, tracking pixels, or any third-party analytics services.</li>
+            </ul>
+
+            <h3>3. Data Storage</h3>
+            <ul>
+                <li>All data is stored locally in your browser using Chrome's secure storage APIs</li>
+                <li>No data is stored on our servers (we don't have any servers)</li>
+                <li>Data syncs across your browsers if you're signed into Chrome sync</li>
+            </ul>
+
+            <h3>4. Permissions Explanation</h3>
+            <p>RavenEye requires the following permissions:</p>
+            <ul>
+                <li><strong>activeTab:</strong> Required to capture visible tab content for OCR processing</li>
+                <li><strong>tabs:</strong> Required to access current tab for screen capture functionality</li>
+                <li><strong>scripting:</strong> Required to inject content script for overlay UI during selection</li>
+                <li><strong>storage:</strong> Required to save user settings and API key securely in browser</li>
+                <li><strong>clipboardWrite:</strong> Required to copy extracted text to clipboard when requested</li>
+                <li><strong>downloads:</strong> Required to save extracted text as .txt files when requested</li>
+                <li><strong>host_permissions:</strong> Required to capture screen content from any website you visit</li>
+            </ul>
+
+            <h3>5. Open Source</h3>
+            <p>RavenEye is fully open source. You can review the entire codebase, verify our privacy claims, and contribute at <a href="https://github.com/devadarshmay-eng/RavenEye" style="color: var(--accent-violet);">GitHub</a>.</p>
+
+            <h3>6. Changes to Privacy Policy</h3>
+            <p>Any changes to this privacy policy will be posted on this page. Continued use of the extension after changes indicates acceptance of the updated policy.</p>
+
+            <h3>7. Contact</h3>
+            <p>For privacy concerns or questions, contact us through the <a href="#support" style="color: var(--accent-violet);">Support section</a>.</p>
+        </div>
+    </section>
+
+    <section id="support" class="section">
+        <div class="section-header">
+            <h2>Support</h2>
+            <p>Need help? We're here to assist</p>
+        </div>
+        <div class="privacy-content">
+            <div class="border-left-violet" style="background: var(--bg-surface); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h3 style="margin-top: 0;">Quick Troubleshooting</h3>
+                <p><strong>Extension not activating?</strong></p>
+                <p>Check if keyboard shortcut conflicts exist in <code>edge://extensions/shortcuts</code>. Try reassigning the shortcut if needed.</p>
+                
+                <p><strong>API key not saving?</strong></p>
+                <p>Click the Save button after entering your key. Wait 1-2 seconds before closing the popup. Verify the key is masked (showing dots) after save.</p>
+                
+                <p><strong>OCR results are empty?</strong></p>
+                <p>Ensure you're selecting a region with actual text. Increase zoom level for better capture quality. Check if your API key is valid at OCR.space dashboard.</p>
+                
+                <p><strong>Invalid API key error?</strong></p>
+                <p>Verify you copied the entire key from your email. Check if you've exceeded the 25,000 monthly request limit. Register for a new free key if needed.</p>
+            </div>
+
+            <h3>Contact & Resources</h3>
+            <ul>
+                <li><strong>GitHub Issues:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye/issues" target="_blank" style="color: var(--accent-violet);">Report bugs or request features</a></li>
+                <li><strong>OCR.space Support:</strong> <a href="https://ocr.space/contact" target="_blank" style="color: var(--accent-violet);">API-related questions</a></li>
+                <li><strong>Source Code:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank" style="color: var(--accent-violet);">View on GitHub</a></li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>RavenEye</h4>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Smart OCR-powered text capture for the modern browser. Open source and privacy-focused.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="#setup">Setup Guide</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank">GitHub</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                    <li><a href="https://ocr.space/privacypolicy" target="_blank">OCR.space Privacy</a></li>
+                    <li><a href="#support">Support</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 RavenEye. Open Source Project. Licensed under MIT.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const navHeight = 64;
+                    const targetPosition = target.offsetTop - navHeight;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-links a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.pageYOffset >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        const accordionTriggers = document.querySelectorAll('.accordion-trigger');
+        
+        accordionTriggers.forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+                const item = trigger.closest('.accordion-item');
+                const content = item ? item.querySelector('.accordion-content') : null;
+                
+                accordionTriggers.forEach(t => {
+                    if (t !== trigger) {
+                        const siblingItem = t.closest('.accordion-item');
+                        const siblingContent = siblingItem ? siblingItem.querySelector('.accordion-content') : null;
+                        t.setAttribute('aria-expanded', 'false');
+                        if (siblingContent) {
+                            siblingContent.classList.remove('active');
+                        }
+                    }
+                });
+                
+                trigger.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+                if (!isExpanded && content) {
+                    content.classList.add('active');
+                } else if (content) {
+                    content.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

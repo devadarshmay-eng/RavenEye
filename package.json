@@ -1,12 +1,13 @@
 {
   "name": "raven-eye",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "build": "vite build && node scripts/build-extension.cjs",
+    "build:extension": "node scripts/build-extension.cjs",
+    "lint": "eslint src --ext ts,tsx --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -23,15 +24,21 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/chrome": "^0.1.21",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.18",
     "canvas": "^3.2.1",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.5"
+    "vite": "^8.0.8"
   }
 }
