@@ -40,6 +40,9 @@ jobs:
       - name: Generate launch bundle
         run: npm run release:marketing
 
+      - name: Confirm release metadata inputs
+        run: test -f release/edge-listing.json && test -f release/policy-contract.json
+
       - name: Setup Pages (best effort)
         id: pages
         continue-on-error: true
