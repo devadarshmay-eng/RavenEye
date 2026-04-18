@@ -98,6 +98,18 @@ If Nano Banana MCP is unavailable in this environment, generate icons manually i
    - `npm run build`
    - `npm run release:validate`
 
+## Docs/Privacy site troubleshooting (404)
+
+If `https://devadarshmay-eng.github.io/RavenEye/` or `/privacy-policy.html` returns 404:
+
+1. Open repository **Settings > Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Rerun workflow **Deploy RavenEye Docs**.
+4. Wait for deploy job completion, then recheck:
+   - `https://devadarshmay-eng.github.io/RavenEye/`
+   - `https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html`
+   - `https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html`
+
 ## Usage
 
 1. Activate capture from the popup button or by pressing `Alt+Shift+E`.

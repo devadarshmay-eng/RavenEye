@@ -81,8 +81,10 @@ jobs:
       - name: Pages setup required
         if: steps.pages_gate.outputs.ready != 'true'
         run: |
-          echo "::warning::GitHub Pages is not enabled for Actions in this repository."
-          echo "::warning::Enable it in Settings > Pages, then rerun this workflow."
+          echo "::error::GitHub Pages is not enabled for Actions in this repository."
+          echo "::error::Fix: Repository Settings > Pages > Build and deployment > Source = GitHub Actions."
+          echo "::error::Then rerun this workflow."
+          exit 1
 
   deploy:
     if: needs.build.outputs.pages_ready == 'true'
