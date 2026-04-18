@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const outputDir = path.join(root, 'dist-marketing');
 const mediaDir = path.join(root, 'dist-media');
-const docsUrl = 'https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html';
+const docsUrl = 'https://devadarshmay-eng.github.io/RavenEye/';
 const privacyUrl = 'https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html';
 
 function run(command) {

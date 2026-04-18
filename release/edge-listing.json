@@ -6,7 +6,7 @@
   "shortDescription": "Capture any region in your browser and extract text with OCR instantly.",
   "longDescription": "RavenEye helps you capture text from images, videos, PDFs, and locked web content. Trigger capture from the popup or keyboard shortcut, select a region, and get OCR output immediately. Settings let you tune overlay appearance, auto-copy extracted text, and optionally save capture images locally.",
   "privacyPolicyUrl": "https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html",
-  "websiteUrl": "https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html",
+  "websiteUrl": "https://devadarshmay-eng.github.io/RavenEye/",
   "supportUrl": "https://github.com/devadarshmay-eng/RavenEye/issues",
   "searchTerms": [
     "ocr",

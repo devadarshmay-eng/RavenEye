@@ -7,7 +7,7 @@ RavenEye is a browser extension for Chrome-based browsers that captures any on-s
 [![Manifest](https://img.shields.io/badge/manifest-V3-10b981?style=flat-square&logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave%20%7C%20Edge-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
 
-**Documentation:** https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html  
+**Documentation:** https://devadarshmay-eng.github.io/RavenEye/  
 **Privacy Policy:** https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html
 
 ## Project Overview
@@ -78,6 +78,25 @@ npm run edge:onboarding
   3. GitHub release asset creation
   4. Edge Add-ons API upload/publish
   5. listing media artifact generation
+
+## Manual Nano Banana icon workflow
+
+If Nano Banana MCP is unavailable in this environment, generate icons manually in Google AI Studio:
+
+1. Open Google AI Studio and choose image generation/editing with Gemini image model.
+2. Prompt (recommended baseline):
+   - `Design a professional minimalist raven-eye logo for a browser extension icon. No text. Premium dark navy to indigo gradient with subtle violet accent. High contrast and clean edges for small sizes.`
+3. Export a square master image at high resolution (for example 1024x1024 PNG).
+4. Resize/export to required extension icon sizes:
+   - `16x16`, `32x32`, `48x48`, `128x128`
+5. Replace these files in the repo:
+   - `public/icons/icon16.png`
+   - `public/icons/icon32.png`
+   - `public/icons/icon48.png`
+   - `public/icons/icon128.png`
+6. Rebuild and validate:
+   - `npm run build`
+   - `npm run release:validate`
 
 ## Usage
 

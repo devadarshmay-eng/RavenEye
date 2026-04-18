@@ -31,7 +31,7 @@
   },
   "policyRequirements": {
     "privacyPolicyUrl": "https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html",
-    "homepageUrl": "https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html",
+    "homepageUrl": "https://devadarshmay-eng.github.io/RavenEye/",
     "mustMentionThirdPartyOCR": true,
     "mustMentionLocalSettingsStorage": true
   }
