@@ -1,0 +1,38 @@
+{
+  "name": "RavenEye Release Policy Contract",
+  "owner": "RavenEye maintainers",
+  "permissions": {
+    "allowed": [
+      "activeTab",
+      "tabs",
+      "scripting",
+      "storage",
+      "clipboardWrite",
+      "downloads"
+    ],
+    "justifications": {
+      "activeTab": "Capture visible area of the active tab after explicit user action.",
+      "tabs": "Read active tab identity and URL context for safe capture orchestration.",
+      "scripting": "Inject capture overlay and interaction logic into the current tab.",
+      "storage": "Persist local extension settings in browser-managed storage.",
+      "clipboardWrite": "Copy OCR output to clipboard when auto-copy is enabled.",
+      "downloads": "Save captured image locally when auto-save is enabled."
+    }
+  },
+  "hostPermissions": {
+    "allowed": [
+      "https://api.ocr.space/*",
+      "<all_urls>"
+    ],
+    "justifications": {
+      "https://api.ocr.space/*": "Send user-selected image data to OCR provider.",
+      "<all_urls>": "Enable capture overlay on user-opened pages, excluding unsupported internal pages."
+    }
+  },
+  "policyRequirements": {
+    "privacyPolicyUrl": "https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html",
+    "homepageUrl": "https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html",
+    "mustMentionThirdPartyOCR": true,
+    "mustMentionLocalSettingsStorage": true
+  }
+}

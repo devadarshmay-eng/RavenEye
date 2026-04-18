@@ -1,0 +1,218 @@
+name: Edge Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish submission after upload (requires manual approval environment)"
+        required: true
+        default: false
+        type: boolean
+      create_github_release:
+        description: "Create a GitHub release for this version"
+        required: true
+        default: true
+        type: boolean
+      notes:
+        description: "Certification notes for Edge submission"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      zip_path: ${{ steps.paths.outputs.zip_path }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint, build, and validate
+        run: |
+          npm run lint
+          npm run build
+          npm run release:validate
+          npm run release:package
+
+      - name: Resolve version
+        id: version
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve artifact path
+        id: paths
+        run: echo "zip_path=dist-artifacts/raveneye-v${{ steps.version.outputs.version }}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-release-artifacts
+          path: |
+            dist-artifacts/**
+            dist-extension/**
+
+  media:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate listing media
+        run: npm run release:media
+
+      - name: Upload media artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-listing-media
+          path: dist-media/**
+
+  marketing:
+    runs-on: ubuntu-latest
+    needs: media
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download media artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: edge-listing-media
+          path: dist-media
+
+      - name: Generate launch bundle
+        run: npm run release:marketing
+
+      - name: Upload marketing bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: launch-marketing-bundle
+          path: dist-marketing/**
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ inputs.create_github_release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: edge-release-artifacts
+          path: .
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          name: RavenEye v${{ needs.build.outputs.version }}
+          files: |
+            dist-artifacts/raveneye-v${{ needs.build.outputs.version }}.zip
+            dist-artifacts/raveneye-v${{ needs.build.outputs.version }}.zip.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  edge-upload-draft:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ !inputs.publish }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: edge-release-artifacts
+          path: .
+
+      - name: Upload draft package to Edge
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PUBLISH_NOTES: ${{ inputs.notes }}
+        run: >
+          node scripts/edge-publish.cjs
+          --package "${{ needs.build.outputs.zip_path }}"
+          --publish false
+
+  edge-publish:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ inputs.publish }}
+    environment:
+      name: edge-publish
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: edge-release-artifacts
+          path: .
+
+      - name: Upload and publish to Edge
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PUBLISH_NOTES: ${{ inputs.notes }}
+        run: >
+          node scripts/edge-publish.cjs
+          --package "${{ needs.build.outputs.zip_path }}"
+          --publish true

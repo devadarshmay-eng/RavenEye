@@ -28,6 +28,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate launch bundle
+        run: npm run release:marketing
+
       - name: Setup Pages (best effort)
         id: pages
         continue-on-error: true
@@ -50,6 +62,11 @@ jobs:
           mkdir -p _site
           cp raveneye-docs.html _site/index.html
           cp privacy-policy.html _site/privacy-policy.html
+          mkdir -p _site/release
+          cp release/edge-listing.json _site/release/edge-listing.json
+          cp release/policy-contract.json _site/release/policy-contract.json
+          cp -r dist-marketing _site/release/launch-bundle
+          node -e "const fs=require('fs');const pkg=require('./package.json');const listing=require('./release/edge-listing.json');const out={name:pkg.name,version:pkg.version,docsUrl:'https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html',privacyUrl:listing.privacyPolicyUrl,updatedAt:new Date().toISOString()};fs.writeFileSync('_site/release/release-metadata.json',JSON.stringify(out,null,2)+'\n');"
 
       - name: Upload artifact
         if: steps.pages_gate.outputs.ready == 'true'

@@ -1,182 +1,125 @@
-<div align="center">
+# RavenEye
 
-# 🦅 RavenEye
-
-**Select. Extract. Done.**
-
-A Chrome extension that extracts text from any region you select on screen — powered by OCR.
+RavenEye is a browser extension for Chrome-based browsers that captures any on-screen region and extracts text using OCR.
 
 [![Version](https://img.shields.io/badge/version-1.0.1-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye/blob/main/LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-V3-10b981?style=flat-square&logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave%20%7C%20Edge-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
 
-</div>
+**Documentation:** https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html  
+**Privacy Policy:** https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html
 
----
+## Project Overview
 
-## 🔍 What is RavenEye?
+RavenEye is designed for fast text capture from web pages, PDFs, videos, and visual content where direct copy is not available. It provides a lightweight capture flow and immediately returns extracted text for copying and reuse.
 
-**RavenEye** is a browser extension for Chrome, Brave, and Edge that lets you **draw a selection rectangle** over any part of your screen and instantly **extracts all the text** from that region using OCR (Optical Character Recognition).
+## Feature Highlights
 
-Think of it like the Windows Snipping Tool — but instead of saving a screenshot, it **reads the text inside** and copies it to your clipboard automatically.
+- Keyboard shortcut and popup-based capture activation
+- Region selection with configurable dim and blur overlay
+- OCR extraction with automatic clipboard copy support
+- Optional capture image download
+- Theme-aware popup settings interface
+- Documentation and privacy pages published via GitHub Pages
 
----
+## Installation
 
-## ✨ Features
-
-| Feature | Description |
-|---|---|
-| 🖱️ **Click-drag selection** | Draw any rectangle on screen to capture a region |
-| ⚡ **Instant OCR** | Powered by managed OCR.space service with no user API-key setup |
-| 📋 **Auto-copy to clipboard** | Text is copied the moment OCR completes |
-| 💾 **Save image** | Optionally download the captured region as a PNG |
-| ⌨️ **Keyboard shortcut** | `Alt+Shift+E` |
-| 🌑 **Customizable dim & blur** | Control how the screen looks during selection |
-| 🎨 **7 accent colors** | Personalize the UI to your taste |
-| 🗜️ **Smart compression** | Auto-compresses large captures for optimal OCR |
-
----
-
-## 📸 How It Works
-
-```
-1.  Press Alt+Shift+E  — or click the extension icon → Activate Capture
-2.  The screen dims
-3.  Draw a rectangle over any text on screen
-4.  OCR extracts text from the selection
-5.  Text is copied to clipboard + shown in the popup
-```
-
----
-
-## 🔧 Installation
-
-> For local testing, load `public/` directly. For submission, build and package `dist-extension/`.
+### Local development (unpacked extension)
 
 ```bash
-# 1. Clone this repo
 git clone https://github.com/devadarshmay-eng/RavenEye.git
 cd RavenEye
+npm install
 ```
 
-Then load it in your browser:
+1. Open `chrome://extensions/` (or `edge://extensions/` / `brave://extensions/`).
+2. Enable **Developer mode**.
+3. Select **Load unpacked**.
+4. Choose the `public/` folder.
 
-1. Navigate to `chrome://extensions/` (or `brave://extensions/` / `edge://extensions/`)
-2. Enable **Developer mode** (toggle in the top-right)
-3. Click **Load unpacked**
-4. Select the **`public/`** folder from this repo
-5. Done! 🦅 RavenEye appears in your toolbar
-
-### 📦 Build release package (Edge Add-ons)
+### Build the marketplace bundle
 
 ```bash
-npm install
+npm run lint
 npm run build
+npm run release:validate
+npm run release:package
 ```
 
-After build completes, zip the contents of `dist-extension/` and upload that zip to Partner Center.
+Zip the **contents** of `dist-extension/` (not the parent folder).  
+Use that ZIP for extension marketplace uploads.
 
----
+## Edge Add-ons release automation
 
-## 🌐 Deploy documentation site (GitHub Pages)
+### One-time onboarding
 
-`raveneye-docs.html` and `privacy-policy.html` are deployed by `.github/workflows/deploy-docs.yml`.
+1. Run the onboarding helper:
 
-1. Push the latest `main` branch to GitHub.
-2. Trigger the workflow (push to `main` or run it manually from Actions).
-3. If the run warns that Pages is not enabled, set **Settings → Pages → Build and deployment = GitHub Actions** once, then rerun.
-4. Open the workflow run summary and copy the generated Pages URL.
-5. Use that URL for Edge listing docs/privacy links.
-
----
-
-## ⚙️ Settings
-
-| Setting | Default | Description |
-|---|---|---|
-| Dim Intensity | 50% | How dark the backdrop gets during selection |
-| Blur Effect | 0px | Blur strength of the backdrop |
-| Save Image | Off | Auto-download the captured region as PNG |
-| Auto-copy Text | On | Automatically copy extracted text to clipboard |
-| Accent Color | Purple | UI highlight color (7 options) |
-
----
-
-## 🗂️ Project Structure
-
-```
-RavenEye/
-├── public/                 # Source extension files (load this for local unpacked testing)
-│   ├── manifest.json       # Extension config (Manifest V3)
-│   ├── background.js       # Service worker — shortcut & capture logic
-│   ├── content.js          # Overlay, selection UI, OCR pipeline
-│   ├── raven-styles.css    # Selection overlay styles
-│   ├── popup.html          # Settings popup UI
-│   ├── popup.js            # Settings logic
-│   └── icons/              # Extension icons (16, 32, 48, 128px)
-├── dist-extension/         # Submission-ready extension output (generated by `npm run build`)
-├── src/                    # React + Vite settings app (UI components)
-│   ├── App.tsx
-│   ├── components/
-│   └── index.css
-├── scripts/                # Build / helper scripts
-├── .github/
-│   └── workflows/
-│       ├── release.yml     # Tag-based extension release workflow
-│       └── deploy-docs.yml # GitHub Pages docs deployment workflow
-├── public/
-├── README.md
-└── LICENSE
+```bash
+npm run edge:onboarding
 ```
 
----
+2. In Partner Center, create your extension product and Publish API credentials.
+3. Add GitHub secrets:
+   - `EDGE_PRODUCT_ID`
+   - `EDGE_CLIENT_ID`
+   - `EDGE_API_KEY`
 
-## 🛠️ Tech Stack
+### Automated release pipeline
+
+- Trigger **Edge Release Pipeline** workflow from GitHub Actions.
+- Choose:
+  - `publish = false` to upload draft only.
+  - `publish = true` to upload and publish (protected by `edge-publish` environment approval).
+- The workflow automatically runs:
+  1. lint/build/preflight validation
+  2. package + checksum generation
+  3. GitHub release asset creation
+  4. Edge Add-ons API upload/publish
+  5. listing media artifact generation
+
+## Usage
+
+1. Activate capture from the popup button or by pressing `Alt+Shift+E`.
+2. Drag to select the target screen region.
+3. Wait for OCR extraction to complete.
+4. Copy text from the result view or save capture output, based on your settings.
+
+## Screenshots
+
+Use the following screenshot set for release listings:
+
+1. Capture activation state
+2. Selection overlay in-progress
+3. OCR result output
+4. Settings popup (dark theme)
+5. Settings popup (light theme)
+
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Extension API | Chrome Manifest V3 |
-| OCR Engine | OCR.space API (managed keyless mode for end users) |
-| Screen Capture | `chrome.tabs.captureVisibleTab` |
+| Extension Platform | Chrome Extensions Manifest V3 |
+| OCR Endpoint | OCR.space API |
+| UI Runtime | React 18 + TypeScript + Vite |
 | Storage | `chrome.storage.sync` |
-| Settings UI | React 18 + TypeScript + Vite |
 | Styling | Tailwind CSS + Radix UI |
 
----
+## Roadmap
 
-## 🔮 Roadmap
+- Multi-language OCR improvements
+- Capture history and retrieval
+- Firefox compatibility path
+- OCR post-processing quality enhancements
 
-- [ ] Multi-language OCR support
-- [ ] History of recent captures
-- [ ] Firefox support (WebExtensions API)
-- [ ] AI-powered text cleanup (fix OCR errors automatically)
-- [ ] Region annotation before capture
-- [ ] PDF text extraction mode
+## Contributing
 
----
+1. Fork the repository and create a feature branch.
+2. Keep changes scoped and production-safe.
+3. Run `npm run lint` and `npm run build`.
+4. Open a pull request with a clear summary and test notes.
 
-## ⚠️ Disclaimer
+## License
 
-RavenEye relies on third-party OCR technology to extract text from screen captures. While it aims to be as accurate as possible, **results may not always be 100% correct** — OCR can make errors, especially with:
-
-- Stylized fonts, handwriting, or decorative text
-- Low-contrast or very small text
-- Heavily curved, blurred, or rotated content
-- Non-Latin scripts or rare languages
-
-> **Always review the extracted text before relying on it for critical use.** RavenEye is a productivity aid, not a guaranteed transcript.
-
----
-
-## 📜 License
-
-MIT — see [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-  <b>🦅 RavenEye</b> — See everything. Capture anything.
-  <br/><br/>
-  Made with ❤️ by <a href="https://github.com/devadarshmay-eng">devadarshmay-eng</a>
-</div>
+MIT — see [LICENSE](LICENSE).

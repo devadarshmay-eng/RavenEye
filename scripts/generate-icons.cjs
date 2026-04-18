@@ -19,14 +19,15 @@ function drawIcon(size) {
     const canvas = createCanvas(size, size);
     const ctx = canvas.getContext('2d');
 
-    // Background: dark gradient
+    // Background: premium dark gradient
     const bg = ctx.createLinearGradient(0, 0, size, size);
-    bg.addColorStop(0, '#1a1a2e');
-    bg.addColorStop(1, '#0f3460');
+    bg.addColorStop(0, '#0b1020');
+    bg.addColorStop(0.5, '#1f2a5f');
+    bg.addColorStop(1, '#4b2ca0');
     ctx.fillStyle = bg;
 
-    // Rounded rect background
-    const r = size * 0.18;
+    // Rounded squircle background
+    const r = size * 0.22;
     ctx.beginPath();
     ctx.moveTo(r, 0);
     ctx.lineTo(size - r, 0);
@@ -40,37 +41,58 @@ function drawIcon(size) {
     ctx.closePath();
     ctx.fill();
 
+    // Soft vignette for depth
+    const vignette = ctx.createRadialGradient(size * 0.5, size * 0.35, size * 0.15, size * 0.5, size * 0.5, size * 0.7);
+    vignette.addColorStop(0, 'rgba(255,255,255,0.12)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.18)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, size, size);
+
     const cx = size / 2;
     const cy = size / 2;
-    const eyeR = size * 0.30; // outer eye ellipse radius
+    const eyeR = size * 0.31;
 
-    // Draw outer eye shape (white)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.lineWidth = Math.max(1, size * 0.06);
+    // Outer eye stroke
+    ctx.strokeStyle = 'rgba(236, 242, 255, 0.92)';
+    ctx.lineWidth = Math.max(1, size * 0.058);
     ctx.beginPath();
-    ctx.ellipse(cx, cy, eyeR, eyeR * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, eyeR, eyeR * 0.58, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw iris
-    const irisR = eyeR * 0.52;
+    // Iris
+    const irisR = eyeR * 0.54;
     const irisGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, irisR);
-    irisGrad.addColorStop(0, '#7c3aed');
-    irisGrad.addColorStop(1, '#4f46e5');
+    irisGrad.addColorStop(0, '#8b5cf6');
+    irisGrad.addColorStop(0.65, '#5b5ff7');
+    irisGrad.addColorStop(1, '#312e81');
     ctx.fillStyle = irisGrad;
     ctx.beginPath();
     ctx.arc(cx, cy, irisR, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw pupil
-    ctx.fillStyle = '#0f0f1a';
+    // Pupil
+    ctx.fillStyle = '#080a14';
     ctx.beginPath();
-    ctx.arc(cx, cy, irisR * 0.45, 0, Math.PI * 2);
+    ctx.arc(cx, cy, irisR * 0.46, 0, Math.PI * 2);
     ctx.fill();
 
-    // Highlight glint
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    // Raven-style accent slash
+    ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+    ctx.lineWidth = Math.max(1, size * 0.035);
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.arc(cx + irisR * 0.25, cy - irisR * 0.25, irisR * 0.2, 0, Math.PI * 2);
+    ctx.moveTo(cx - irisR * 0.7, cy + irisR * 0.45);
+    ctx.lineTo(cx + irisR * 0.75, cy - irisR * 0.58);
+    ctx.stroke();
+
+    // Highlight glints
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.beginPath();
+    ctx.arc(cx + irisR * 0.28, cy - irisR * 0.30, irisR * 0.17, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.beginPath();
+    ctx.arc(cx - irisR * 0.36, cy + irisR * 0.18, irisR * 0.1, 0, Math.PI * 2);
     ctx.fill();
 
     return canvas;

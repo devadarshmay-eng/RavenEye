@@ -1,0 +1,53 @@
+name: Release Preflight
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - "public/**"
+      - "src/**"
+      - "scripts/**"
+      - "release/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/release-preflight.yml"
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and build
+        run: |
+          npm run lint
+          npm run build
+
+      - name: Validate release contract
+        run: npm run release:validate
+
+      - name: Build release package
+        run: npm run release:package
+
+      - name: Upload preflight artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-artifacts
+          path: |
+            dist-extension/**
+            dist-artifacts/**
