@@ -1,6 +1,7 @@
 // RavenEye Popup Script
 
 document.addEventListener("DOMContentLoaded", () => {
+  const root = document.documentElement;
   const captureBtn = document.getElementById("captureBtn");
   const dimSlider = document.getElementById("dimSlider");
   const blurSlider = document.getElementById("blurSlider");
@@ -23,6 +24,16 @@ document.addEventListener("DOMContentLoaded", () => {
     theme: "dark"
   };
 
+  function normalizeTheme(theme) {
+    return theme === "light" ? "light" : "dark";
+  }
+
+  function applyTheme(theme) {
+    const nextTheme = normalizeTheme(theme);
+    root.setAttribute("data-theme", nextTheme);
+    themeToggle.checked = nextTheme === "dark";
+  }
+
   chrome.storage.sync.get(defaultSettings, (settings) => {
     dimSlider.value = settings.dimIntensity;
     blurSlider.value = settings.blurIntensity;
@@ -30,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     blurVal.textContent = `${settings.blurIntensity}px`;
     saveImageToggle.checked = settings.saveImage;
     autoCopyToggle.checked = settings.autoCopy;
-    themeToggle.checked = settings.theme === "dark";
+    applyTheme(settings.theme);
   });
 
   captureBtn.addEventListener("click", () => {
@@ -73,6 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
       autoCopy: autoCopyToggle.checked,
       theme: themeToggle.checked ? "dark" : "light"
     };
+
+    applyTheme(settingsToSave.theme);
 
     chrome.storage.sync.set(settingsToSave, () => {
       showToast("✓ Settings saved");

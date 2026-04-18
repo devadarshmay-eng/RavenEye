@@ -3,7 +3,7 @@
   "name": "RavenEye",
   "version": "1.0.1",
   "description": "Select any region on screen and extract text instantly. Smart OCR-powered text capture for the modern browser.",
-  "homepage_url": "https://devadarshmay-eng.github.io/RavenEye/raveneye-docs.html",
+  "homepage_url": "https://devadarshmay-eng.github.io/RavenEye/",
   "permissions": [
     "activeTab",
     "tabs",
