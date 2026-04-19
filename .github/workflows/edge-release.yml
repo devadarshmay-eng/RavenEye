@@ -155,7 +155,7 @@ jobs:
   edge-upload-draft:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.publish && secrets.EDGE_PRODUCT_ID != '' && secrets.EDGE_CLIENT_ID != '' && secrets.EDGE_API_KEY != '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.publish }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -175,7 +175,21 @@ jobs:
           name: edge-release-artifacts
           path: .
 
+      - name: Check Edge credentials
+        id: creds
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: |
+          if [ -n "$EDGE_PRODUCT_ID" ] && [ -n "$EDGE_CLIENT_ID" ] && [ -n "$EDGE_API_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload draft package to Edge
+        if: ${{ steps.creds.outputs.ready == 'true' }}
         env:
           EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
           EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
@@ -186,10 +200,15 @@ jobs:
           --package "${{ needs.build.outputs.zip_path }}"
           --publish false
 
+      - name: Skip notice (missing Edge secrets)
+        if: ${{ steps.creds.outputs.ready != 'true' }}
+        run: |
+          echo "Skipping draft upload: missing EDGE_PRODUCT_ID / EDGE_CLIENT_ID / EDGE_API_KEY."
+
   edge-publish:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ (github.event_name == 'push' || inputs.publish) && secrets.EDGE_PRODUCT_ID != '' && secrets.EDGE_CLIENT_ID != '' && secrets.EDGE_API_KEY != '' }}
+    if: ${{ github.event_name == 'push' || inputs.publish }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -209,7 +228,21 @@ jobs:
           name: edge-release-artifacts
           path: .
 
+      - name: Check Edge credentials
+        id: creds
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: |
+          if [ -n "$EDGE_PRODUCT_ID" ] && [ -n "$EDGE_CLIENT_ID" ] && [ -n "$EDGE_API_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload and publish to Edge
+        if: ${{ steps.creds.outputs.ready == 'true' }}
         env:
           EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
           EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
@@ -220,13 +253,7 @@ jobs:
           --package "${{ needs.build.outputs.zip_path }}"
           --publish true
 
-  edge-secrets-missing:
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ (github.event_name == 'push' || inputs.publish || (github.event_name == 'workflow_dispatch' && !inputs.publish)) && (secrets.EDGE_PRODUCT_ID == '' || secrets.EDGE_CLIENT_ID == '' || secrets.EDGE_API_KEY == '') }}
-    steps:
-      - name: Explain why Edge submission was skipped
+      - name: Skip notice (missing Edge secrets)
+        if: ${{ steps.creds.outputs.ready != 'true' }}
         run: |
-          echo "Edge submission skipped because required repo secrets are not configured."
-          echo "Missing one or more: EDGE_PRODUCT_ID, EDGE_CLIENT_ID, EDGE_API_KEY."
-          echo "Set these secrets in GitHub repository settings to enable automated Edge upload/publish."
+          echo "Skipping Edge publish: missing EDGE_PRODUCT_ID / EDGE_CLIENT_ID / EDGE_API_KEY."
