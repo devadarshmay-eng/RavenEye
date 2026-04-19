@@ -68,16 +68,22 @@ npm run edge:onboarding
 
 ### Automated release pipeline
 
-- Trigger **Edge Release Pipeline** workflow from GitHub Actions.
-- Choose:
-  - `publish = false` to upload draft only.
-  - `publish = true` to upload and publish (protected by `edge-publish` environment approval).
-- The workflow automatically runs:
+- Automatic path:
+  - Push a version tag like `v1.0.2` to `main`.
+  - Pipeline auto-builds, creates GitHub release, uploads package, and submits publish request to Edge.
+- Manual path:
+  - Trigger **Edge Release Pipeline** via `workflow_dispatch`.
+  - Choose:
+    - `publish = false` to upload draft only.
+    - `publish = true` to upload and publish immediately.
+- The workflow runs:
   1. lint/build/preflight validation
   2. package + checksum generation
   3. GitHub release asset creation
   4. Edge Add-ons API upload/publish
   5. listing media artifact generation
+
+> Note: end-user updates are automatic after Microsoft approves each submitted update.
 
 ## Docs/Privacy site troubleshooting (404)
 
