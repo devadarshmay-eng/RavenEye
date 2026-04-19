@@ -106,13 +106,20 @@ If `https://devadarshmay-eng.github.io/RavenEye/` or `/privacy-policy.html` retu
 
 ## Screenshots
 
-Use the following screenshot set for release listings:
+The screenshot set is ordered for release listings and product walkthrough:
 
-1. Capture activation state
-2. Selection overlay in-progress
-3. OCR result output
-4. Settings popup (dark theme)
-5. Settings popup (light theme)
+1. **Problem [ not all texts cant be copied ]**  
+   ![Problem [ not all texts cant be copied ]](assets/screenshots/01-capture-activation.png)
+2. **selecting raveneye extension**  
+   ![selecting raveneye extension](assets/screenshots/02-selection-overlay.png)
+3. **exntension pop up**  
+   ![exntension pop up](assets/screenshots/03-ocr-result.png)
+4. **pop up / extension settings**  
+   ![pop up / extension settings](assets/screenshots/04-settings-dark.png)
+5. **snip selecting the selection**  
+   ![snip selecting the selection](assets/screenshots/05-settings-light.png)
+6. **selected text**  
+   ![selected text](assets/screenshots/06-additional-view.png)
 
 ## Tech Stack
 
