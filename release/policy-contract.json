@@ -21,11 +21,9 @@
   },
   "hostPermissions": {
     "allowed": [
-      "https://api.ocr.space/*",
       "<all_urls>"
     ],
     "justifications": {
-      "https://api.ocr.space/*": "Send user-selected image data to OCR provider.",
       "<all_urls>": "Enable capture overlay on user-opened pages, excluding unsupported internal pages."
     }
   },

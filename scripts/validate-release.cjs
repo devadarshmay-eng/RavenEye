@@ -83,7 +83,7 @@ assert(
 
 if (policy.policyRequirements.mustMentionThirdPartyOCR) {
   assert(
-    privacyPolicy.includes('api.ocr.space') || privacyPolicy.includes('OCR.space'),
+    privacyPolicy.includes('OCR relay') || privacyPolicy.includes('OCR provider'),
     'privacy-policy.html must mention OCR provider usage'
   );
 }

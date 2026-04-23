@@ -533,7 +533,7 @@
             <div class="step-card">
                 <div class="step-number">2</div>
                 <h3>Open a page with text</h3>
-                <p>Go to any website, document, or visual content where text is visible. No API key setup is required.</p>
+                <p>Go to any website, document, or visual content where text is visible. Make sure OCR Relay URL is configured in settings.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">3</div>
@@ -552,7 +552,7 @@
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">⚡</div>
                 <h3>Lightning Fast OCR</h3>
-                <p>Extract text from any screen region in seconds. Powered by managed OCR.space service with high accuracy.</p>
+                <p>Extract text from any screen region in seconds using your configured OCR relay endpoint.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🎯</div>
@@ -562,7 +562,7 @@
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🔒</div>
                 <h3>Privacy First</h3>
-                <p>No API key setup, no tracking, no analytics, no data collection by RavenEye. Fully open source and transparent.</p>
+                <p>Provider secrets stay server-side in your OCR relay. RavenEye remains open source and transparent.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">📋</div>
@@ -594,7 +594,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>No. RavenEye uses managed OCR requests, so end users don't need to register, create, or manage API keys.</p>
+                        <p>You only need an OCR relay URL. Provider API credentials should stay on the relay server.</p>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -603,7 +603,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>No. RavenEye now works without API-key storage. You can install and start using OCR immediately.</p>
+                        <p>No provider key should be stored in the extension. Configure only the relay URL in settings.</p>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -639,7 +639,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>OCR.space-based recognition supports multiple major languages. Accuracy depends on capture quality and script complexity.</p>
+                        <p>Language support depends on your OCR relay/provider setup. Accuracy depends on capture quality and script complexity.</p>
                     </div>
                 </div>
             </div>
@@ -655,7 +655,7 @@
             <h3>1. Information Collection</h3>
             <p>RavenEye collects minimal information necessary for functionality:</p>
             <ul>
-                <li><strong>No API Key Storage:</strong> RavenEye does not require or store OCR API keys.</li>
+                <li><strong>No Provider Key Storage:</strong> RavenEye stores only settings; provider secrets should live on your OCR relay.</li>
                 <li><strong>Settings:</strong> User preferences (auto-copy, image quality) are stored locally in your browser.</li>
                 <li><strong>Screen Captures:</strong> Temporary screenshots are captured for OCR processing and immediately deleted after processing completes.</li>
             </ul>
@@ -663,7 +663,7 @@
             <h3>2. Data Sharing</h3>
             <p>RavenEye shares data only with services necessary for core functionality:</p>
             <ul>
-                <li><strong>OCR.space Endpoint:</strong> Screen captures are sent to OCR.space for text extraction. RavenEye does not store these captures on developer servers.</li>
+                <li><strong>OCR Relay Endpoint:</strong> Screen captures are sent to the relay URL you configure for text extraction.</li>
                 <li><strong>No Third-Party Analytics:</strong> We do not use Google Analytics, tracking pixels, or any third-party analytics services.</li>
             </ul>
 
@@ -709,7 +709,7 @@
                 <p>Check if keyboard shortcut conflicts exist in <code>edge://extensions/shortcuts</code>. Try reassigning the shortcut if needed.</p>
                 
                 <p><strong>OCR request failed?</strong></p>
-                <p>Check your internet connection and retry. Some networks may block OCR service traffic.</p>
+                        <p>Check your relay URL, server availability, and internet connection. Some networks may block outbound OCR traffic.</p>
                 
                 <p><strong>OCR results are empty?</strong></p>
                 <p>Ensure you're selecting a region with actual text. Increase zoom level for better capture quality and contrast.</p>
@@ -718,7 +718,7 @@
             <h3>Contact & Resources</h3>
             <ul>
                 <li><strong>GitHub Issues:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye/issues" target="_blank" style="color: var(--accent-violet);">Report bugs or request features</a></li>
-                <li><strong>Service Endpoint:</strong> <a href="https://api.ocr.space/parse/image" target="_blank" style="color: var(--accent-violet);">OCR.space endpoint</a></li>
+                <li><strong>Service Endpoint:</strong> Configure your own OCR relay URL in extension settings.</li>
                 <li><strong>Source Code:</strong> <a href="https://github.com/devadarshmay-eng/RavenEye" target="_blank" style="color: var(--accent-violet);">View on GitHub</a></li>
             </ul>
         </div>

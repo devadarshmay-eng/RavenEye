@@ -67,8 +67,8 @@
         <p>RavenEye ("we", "our", "the extension") is committed to protecting your privacy. This Privacy Policy explains how we handle data when you use our browser extension.</p>
         
         <h2>1. Information We Collect</h2>
-        <p><strong class="highlight">We do NOT collect, store, or transmit any personal information to our servers.</strong></p>
-        <p>RavenEye operates entirely within your browser. All data processing happens locally on your device.</p>
+        <p><strong class="highlight">We do NOT collect or store personal information on developer-controlled infrastructure.</strong></p>
+        <p>RavenEye runs in your browser and only sends screenshots to the OCR relay endpoint you configure for text extraction.</p>
         
         <h2>2. Data Stored Locally on Your Device</h2>
         <p>The extension stores the following data <strong>only on your device</strong> using Chrome's secure storage API (chrome.storage.sync):</p>
@@ -87,15 +87,15 @@
         <p>This data is synchronized across your devices if you use Chrome/Edge Sync, but <strong>it remains private to you</strong> and is not accessible to us.</p>
         
         <h2>3. Third-Party Services</h2>
-        <p>When you activate the OCR feature and capture a screenshot, RavenEye sends the captured image to:</p>
+        <p>When you activate OCR and capture a screenshot, RavenEye sends the image to your configured OCR relay endpoint:</p>
         
-        <h3>OCR.space Endpoint</h3>
+        <h3>OCR Relay Endpoint</h3>
         <ul>
             <li><strong>Purpose:</strong> To perform Optical Character Recognition (convert image to text)</li>
             <li><strong>Data Sent:</strong> Screenshot image only (temporary)</li>
-            <li><strong>Authentication:</strong> No API key is required from the user</li>
-            <li><strong>Data Retention:</strong> RavenEye does not persist captures on developer-controlled servers</li>
-            <li><strong>Endpoint:</strong> <a href="https://api.ocr.space/parse/image" target="_blank">https://api.ocr.space/parse/image</a></li>
+            <li><strong>Authentication:</strong> Provider secrets should remain on your server-side relay</li>
+            <li><strong>Data Retention:</strong> Controlled by your relay and OCR provider policy</li>
+            <li><strong>Endpoint:</strong> Configurable in RavenEye settings (example: <code>https://your-domain.com/api/ocr</code>)</li>
         </ul>
         
         <h2>4. Permissions Explained</h2>
@@ -107,7 +107,7 @@
             <li><strong>storage:</strong> Required to save your settings locally in encrypted browser storage</li>
             <li><strong>clipboardWrite:</strong> Required to copy extracted text to your clipboard (when auto-copy is enabled)</li>
             <li><strong>downloads:</strong> Required to save captured images to your Downloads folder (when auto-save is enabled)</li>
-            <li><strong>https://api.ocr.space/* (host permission):</strong> Required only to send your selected image for OCR text extraction</li>
+            <li><strong>&lt;all_urls&gt; (host permission):</strong> Required for capture overlay and OCR execution on user-opened webpages</li>
         </ul>
         
         <h2>5. Analytics & Tracking</h2>
@@ -131,13 +131,13 @@
             <li>Use your data for marketing</li>
             <li>Collect your browsing history</li>
         </ul>
-        <p>Your settings remain on your device. The only data transmission is the screenshot you choose to process through the OCR endpoint.</p>
+        <p>Your settings remain on your device. The only data transmission is the screenshot you choose to process through your OCR relay endpoint.</p>
         
         <h2>7. Data Security</h2>
         <ul>
-            <li>All network requests to OCR services use HTTPS (encrypted communication)</li>
-            <li>Screenshots are sent directly from your browser to the OCR endpoint</li>
-            <li>No data is stored on our servers (we don't have any servers)</li>
+            <li>Use HTTPS for OCR relay communication</li>
+            <li>Screenshots are sent from your browser to the configured OCR relay endpoint</li>
+            <li>Provider credentials should never be embedded in extension source code</li>
         </ul>
         
         <h2>8. Your Rights & Control</h2>
@@ -185,8 +185,8 @@
         <p><strong>In plain English:</strong></p>
         <ol>
             <li>We don't collect your personal data - everything stays on your device</li>
-            <li>No API key setup is required for RavenEye usage</li>
-            <li>Screenshots are sent to an OCR endpoint for processing (not to us)</li>
+            <li>Set your OCR relay URL in RavenEye settings before first OCR use</li>
+            <li>Screenshots are sent only to your configured OCR relay endpoint for processing</li>
             <li>We don't track you, use analytics, or serve ads</li>
             <li>You can delete all data by uninstalling the extension</li>
             <li>The code is open source - you can verify everything</li>

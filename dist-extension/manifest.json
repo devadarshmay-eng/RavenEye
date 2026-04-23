@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RavenEye",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Select any region on screen and extract text instantly. Smart OCR-powered text capture for the modern browser.",
   "homepage_url": "https://devadarshmay-eng.github.io/RavenEye/",
   "permissions": [
@@ -13,7 +13,6 @@
     "downloads"
   ],
   "host_permissions": [
-    "https://api.ocr.space/*",
     "<all_urls>"
   ],
   "background": {

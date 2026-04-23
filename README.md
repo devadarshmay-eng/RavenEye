@@ -2,7 +2,7 @@
 
 RavenEye is a browser extension for Chrome-based browsers that captures any on-screen region and extracts text using OCR.
 
-[![Version](https://img.shields.io/badge/version-1.0.1-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye/blob/main/LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-V3-10b981?style=flat-square&logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave%20%7C%20Edge-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
@@ -13,6 +13,20 @@ RavenEye is a browser extension for Chrome-based browsers that captures any on-s
 ## Project Overview
 
 RavenEye is designed for fast text capture from web pages, PDFs, videos, and visual content where direct copy is not available. It provides a lightweight capture flow and immediately returns extracted text for copying and reuse.
+
+## OCR Relay Setup (required)
+
+RavenEye now uses a configurable OCR relay endpoint so provider secrets stay on the server side.
+
+1. Deploy or use an OCR relay endpoint that accepts `POST` JSON:
+   - `imageDataUrl` (data URL string)
+   - `language` (optional, currently `eng`)
+2. Return JSON with extracted text in one of:
+   - `text`
+   - `ocrText`
+   - `extractedText`
+   - `data.text` / `result.text`
+3. In extension popup settings, set **OCR Relay URL** (e.g. `https://your-domain.com/api/ocr`).
 
 ## Feature Highlights
 
@@ -126,7 +140,7 @@ The screenshot set is ordered for release listings and product walkthrough:
 | Layer | Technology |
 |---|---|
 | Extension Platform | Chrome Extensions Manifest V3 |
-| OCR Endpoint | OCR.space API |
+| OCR Endpoint | Configurable OCR relay (server-side secret model) |
 | UI Runtime | React 18 + TypeScript + Vite |
 | Storage | `chrome.storage.sync` |
 | Styling | Tailwind CSS + Radix UI |

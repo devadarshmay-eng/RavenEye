@@ -89,7 +89,7 @@ function App() {
                     </div>
                 </div>
                 <div className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border font-mono">
-                    v1.0.1
+                    v1.0.2
                 </div>
             </div>
 

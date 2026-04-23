@@ -128,60 +128,109 @@ async function handleCapture(message, sender, sendResponse) {
   }
 }
 
-const OCR_PROVIDER_ENDPOINT = "https://api.ocr.space/parse/image";
-const OCR_PROVIDER_SHARED_KEY = "helloworld";
+const DEFAULT_OCR_SETTINGS = {
+  ocrRelayUrl: ""
+};
 
-async function dataUrlToBlob(dataUrl) {
+function getStoredOcrSettings() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(DEFAULT_OCR_SETTINGS, (settings) => {
+      resolve(settings || DEFAULT_OCR_SETTINGS);
+    });
+  });
+}
+
+function normalizeRelayUrl(value) {
+  if (typeof value !== "string") return "";
+  return value.trim();
+}
+
+function extractRelayText(payload) {
+  if (!payload || typeof payload !== "object") return "";
+
+  const candidates = [
+    payload.text,
+    payload.ocrText,
+    payload.extractedText,
+    payload?.data?.text,
+    payload?.result?.text
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return "";
+}
+
+function extractRelayError(payload) {
+  if (!payload || typeof payload !== "object") return "";
+  const candidates = [
+    payload.error,
+    payload.message,
+    payload?.data?.error,
+    payload?.result?.error
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  return "";
+}
+
+async function requestOcrRelay(dataUrl, relayUrl) {
   if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
     throw new Error("Invalid capture data.");
   }
-
-  const response = await fetch(dataUrl);
-  if (!response.ok) {
-    throw new Error("Failed to prepare capture image.");
-  }
-
-  return response.blob();
-}
-
-async function requestOcrSpace(imageBlob) {
-  const formData = new FormData();
-  formData.append("apikey", OCR_PROVIDER_SHARED_KEY);
-  formData.append("file", imageBlob, `raveneye-${Date.now()}.png`);
-  formData.append("language", "eng");
-  formData.append("isOverlayRequired", "false");
-  formData.append("scale", "true");
-  formData.append("OCREngine", "2");
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 20000);
 
   try {
-    const response = await fetch(OCR_PROVIDER_ENDPOINT, {
+    const response = await fetch(relayUrl, {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        imageDataUrl: dataUrl,
+        language: "eng"
+      }),
       signal: controller.signal
     });
 
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
     if (!response.ok) {
-      throw new Error(`OCR provider error (${response.status}).`);
+      const providerMessage = extractRelayError(payload);
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(providerMessage || "OCR relay authentication failed. Check relay secret configuration.");
+      }
+      if (response.status === 429) {
+        throw new Error(providerMessage || "OCR relay rate limit reached. Please retry in a moment.");
+      }
+      throw new Error(providerMessage || `OCR relay error (${response.status}).`);
     }
 
-    const payload = await response.json();
-    if (payload?.OCRExitCode === 1 && Array.isArray(payload.ParsedResults)) {
-      const extracted = payload.ParsedResults
-        .map((entry) => (entry?.ParsedText || "").trim())
-        .filter(Boolean)
-        .join("\n")
-        .trim();
-      return extracted;
+    const text = extractRelayText(payload);
+    if (text) return text;
+
+    const providerMessage = extractRelayError(payload);
+    if (providerMessage) {
+      throw new Error(providerMessage);
     }
 
-    if (payload?.OCRExitCode === 3) {
-      throw new Error("OCR provider rate limit reached. Please retry in a moment.");
-    }
-
-    throw new Error("OCR provider could not extract text from this capture.");
+    throw new Error("OCR relay could not extract text from this capture.");
   } finally {
     clearTimeout(timeoutId);
   }
@@ -189,8 +238,13 @@ async function requestOcrSpace(imageBlob) {
 
 async function handleOCR(dataUrl, sendResponse) {
   try {
-    const imageBlob = await dataUrlToBlob(dataUrl);
-    const text = await requestOcrSpace(imageBlob);
+    const settings = await getStoredOcrSettings();
+    const relayUrl = normalizeRelayUrl(settings.ocrRelayUrl);
+    if (!relayUrl) {
+      throw new Error("OCR relay URL is not configured. Set it in RavenEye settings.");
+    }
+
+    const text = await requestOcrRelay(dataUrl, relayUrl);
     sendResponse({ success: true, text });
   } catch (error) {
     console.error('[RavenEye] OCR Error:', error);

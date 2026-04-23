@@ -10,9 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveImageToggle = document.getElementById("saveImageToggle");
   const autoCopyToggle = document.getElementById("autoCopyToggle");
   const themeToggle = document.getElementById("themeToggle");
+  const ocrRelayUrlInput = document.getElementById("ocrRelayUrlInput");
   const toast = document.getElementById("saved-toast");
 
-  if (!captureBtn || !dimSlider || !blurSlider || !dimVal || !blurVal || !saveImageToggle || !autoCopyToggle || !themeToggle || !toast) {
+  if (!captureBtn || !dimSlider || !blurSlider || !dimVal || !blurVal || !saveImageToggle || !autoCopyToggle || !themeToggle || !ocrRelayUrlInput || !toast) {
     return;
   }
 
@@ -21,7 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
     blurIntensity: 0,
     saveImage: false,
     autoCopy: true,
-    theme: "dark"
+    theme: "dark",
+    ocrRelayUrl: ""
   };
 
   function normalizeTheme(theme) {
@@ -42,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     saveImageToggle.checked = settings.saveImage;
     autoCopyToggle.checked = settings.autoCopy;
     applyTheme(settings.theme);
+    ocrRelayUrlInput.value = typeof settings.ocrRelayUrl === "string" ? settings.ocrRelayUrl : "";
   });
 
   captureBtn.addEventListener("click", () => {
@@ -75,14 +78,29 @@ document.addEventListener("DOMContentLoaded", () => {
   saveImageToggle.addEventListener("change", saveSettings);
   autoCopyToggle.addEventListener("change", saveSettings);
   themeToggle.addEventListener("change", saveSettings);
+  ocrRelayUrlInput.addEventListener("change", saveSettings);
 
   function saveSettings() {
+    const relayUrl = ocrRelayUrlInput.value.trim();
+    if (relayUrl) {
+      try {
+        const parsed = new URL(relayUrl);
+        if (!["https:", "http:"].includes(parsed.protocol)) {
+          throw new Error("protocol");
+        }
+      } catch {
+        showToast("❌ Enter a valid OCR relay URL");
+        return;
+      }
+    }
+
     const settingsToSave = {
       dimIntensity: parseInt(dimSlider.value, 10),
       blurIntensity: parseInt(blurSlider.value, 10),
       saveImage: saveImageToggle.checked,
       autoCopy: autoCopyToggle.checked,
-      theme: themeToggle.checked ? "dark" : "light"
+      theme: themeToggle.checked ? "dark" : "light",
+      ocrRelayUrl: relayUrl
     };
 
     applyTheme(settingsToSave.theme);

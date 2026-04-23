@@ -1,12 +1,5 @@
 // RavenEye Content Script - Shadcn Edition
 (function () {
-  const ICONS = {
-    close: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
-    copy: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`,
-    image: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,
-    check: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
-  };
-
   let overlay, selectionBox, tip, resultPopup;
   let isActive = false;
   let isDragging = false;
@@ -29,7 +22,8 @@
         blurIntensity: 0,
         saveImage: false,
         autoCopy: true,
-        theme: 'dark'
+        theme: 'dark',
+        ocrRelayUrl: ''
       }, (s) => {
         settings = s;
         resolve(s);
@@ -78,7 +72,15 @@
     tip = document.createElement('div');
     tip.id = 'raveneye-tip';
     tip.className = 'raven-ui';
-    tip.innerHTML = `<span>Drag to capture</span> <kbd>ESC</kbd> to cancel`;
+    const tipText = document.createElement('span');
+    tipText.textContent = 'Drag to capture';
+    const tipKey = document.createElement('kbd');
+    tipKey.textContent = 'ESC';
+    const tipSuffix = document.createTextNode(' to cancel');
+    tip.appendChild(tipText);
+    tip.appendChild(document.createTextNode(' '));
+    tip.appendChild(tipKey);
+    tip.appendChild(tipSuffix);
     overlay.appendChild(tip);
 
     document.body.appendChild(overlay);
@@ -243,24 +245,55 @@
     resultPopup.id = 'raveneye-result';
     resultPopup.className = 'raven-ui';
 
-    resultPopup.innerHTML = `
-      <div class="raven-header">
-        <span class="raven-title">RavenEye</span>
-        <button class="raven-close">${ICONS.close}</button>
-      </div>
-      <div class="raven-preview">
-        <img src="${imgUrl}" />
-      </div>
-      <div class="raven-content">
-        <textarea id="raven-text-area" class="raven-text-area" readonly>Processing text...</textarea>
-        <div class="raven-actions">
-           <button id="btn-copy-text" class="raven-btn primary">${ICONS.copy} Copy Text</button>
-           <button id="btn-copy-img" class="raven-btn">${ICONS.image} Copy Image</button>
-        </div>
-      </div>
-    `;
+    const header = document.createElement('div');
+    header.className = 'raven-header';
+    const title = document.createElement('span');
+    title.className = 'raven-title';
+    title.textContent = 'RavenEye';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'raven-close';
+    closeBtn.type = 'button';
+    closeBtn.textContent = '×';
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    const preview = document.createElement('div');
+    preview.className = 'raven-preview';
+    const previewImage = document.createElement('img');
+    previewImage.id = 'raven-preview-image';
+    previewImage.alt = 'Capture preview';
+    preview.appendChild(previewImage);
+
+    const content = document.createElement('div');
+    content.className = 'raven-content';
+    const textArea = document.createElement('textarea');
+    textArea.id = 'raven-text-area';
+    textArea.className = 'raven-text-area';
+    textArea.readOnly = true;
+    textArea.value = 'Processing text...';
+    const actions = document.createElement('div');
+    actions.className = 'raven-actions';
+    const copyTextBtn = document.createElement('button');
+    copyTextBtn.id = 'btn-copy-text';
+    copyTextBtn.className = 'raven-btn primary';
+    copyTextBtn.type = 'button';
+    copyTextBtn.textContent = 'Copy Text';
+    const copyImgBtn = document.createElement('button');
+    copyImgBtn.id = 'btn-copy-img';
+    copyImgBtn.className = 'raven-btn';
+    copyImgBtn.type = 'button';
+    copyImgBtn.textContent = 'Copy Image';
+    actions.appendChild(copyTextBtn);
+    actions.appendChild(copyImgBtn);
+    content.appendChild(textArea);
+    content.appendChild(actions);
+
+    resultPopup.appendChild(header);
+    resultPopup.appendChild(preview);
+    resultPopup.appendChild(content);
 
     document.body.appendChild(resultPopup);
+    previewImage.src = imgUrl;
 
     // --- Auto-Hide Logic ---
     let hideTimer;
@@ -344,7 +377,7 @@
 
     const toast = document.createElement('div');
     toast.className = 'raven-ui raven-toast';
-    toast.innerHTML = `${ICONS.check} ${msg}`;
+    toast.textContent = `✓ ${msg}`;
     document.body.appendChild(toast);
 
     setTimeout(() => {
