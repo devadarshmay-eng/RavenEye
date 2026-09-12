@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.runtime.sendMessage({ action: "ACTIVATE_FROM_POPUP" }, (response) => {
       captureBtn.disabled = false;
       if (chrome.runtime.lastError) {
-        showToast(`❌ ${chrome.runtime.lastError.message}`);
+        showToast(`❌ RavenEye background is unavailable. Reload the add-on in about:debugging.`);
         return;
       }
 

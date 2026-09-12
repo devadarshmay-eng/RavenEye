@@ -1,5 +1,4 @@
 // RavenEye offline background service.
-importScripts("tesseract.min.js");
 
 const DEFAULT_OCR_SETTINGS = {
   dimIntensity: 50,
@@ -97,6 +96,14 @@ async function activateCapture() {
 
 function getOcrWorker() {
   if (!ocrWorkerPromise) {
+    try {
+      if (typeof Tesseract === "undefined") {
+        importScripts("tesseract.min.js");
+      }
+    } catch (error) {
+      return Promise.reject(new Error(`Offline OCR engine could not start: ${error.message}`));
+    }
+
     ocrWorkerPromise = Tesseract.createWorker("eng", 1, {
       workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
       corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
