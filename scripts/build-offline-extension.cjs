@@ -45,7 +45,7 @@ for (const browser of ['chromium', 'firefox']) {
 
   if (browser === 'firefox') {
     manifest.manifest_version = 3;
-    manifest.permissions = [...new Set([...(manifest.permissions || []), '<all_urls>'])];
+    manifest.permissions = (manifest.permissions || []).filter((permission) => permission !== '<all_urls>');
     manifest.host_permissions = ['<all_urls>'];
     manifest.browser_specific_settings = {
       gecko: { id: 'raveneye@devadarshmay-eng.github.io', strict_min_version: '109.0' }
