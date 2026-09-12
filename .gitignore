@@ -28,6 +28,8 @@ yarn.lock
 # Build outputs
 dist/
 dist-extension/
+dist-offline/
+dist-artifacts/
 *.zip
 *.crx
 *.pem
