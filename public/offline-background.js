@@ -10,6 +10,29 @@ const DEFAULT_OCR_SETTINGS = {
 
 let ocrWorkerPromise;
 
+function loadTesseract() {
+  if (typeof Tesseract !== "undefined") {
+    return Promise.resolve();
+  }
+
+  if (typeof importScripts === "function") {
+    importScripts("tesseract.min.js");
+    return Promise.resolve();
+  }
+
+  if (typeof document === "undefined") {
+    return Promise.reject(new Error("The offline OCR background context is unavailable."));
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = chrome.runtime.getURL("tesseract.min.js");
+    script.onload = resolve;
+    script.onerror = () => reject(new Error("Could not load the bundled offline OCR engine."));
+    document.head.appendChild(script);
+  });
+}
+
 function getActiveTab() {
   return new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -96,28 +119,23 @@ async function activateCapture() {
 
 function getOcrWorker() {
   if (!ocrWorkerPromise) {
-    try {
-      if (typeof Tesseract === "undefined") {
-        importScripts("tesseract.min.js");
-      }
-    } catch (error) {
-      return Promise.reject(new Error(`Offline OCR engine could not start: ${error.message}`));
-    }
-
-    ocrWorkerPromise = Tesseract.createWorker("eng", 1, {
-      workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
-      corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
-      langPath: chrome.runtime.getURL("tessdata")
-    }).then(async (worker) => {
-      await worker.setParameters({
-        tessedit_pageseg_mode: "6",
-        preserve_interword_spaces: "1"
+    ocrWorkerPromise = loadTesseract()
+      .then(() => Tesseract.createWorker("eng", 1, {
+        workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
+        corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
+        langPath: chrome.runtime.getURL("tessdata")
+      }))
+      .then(async (worker) => {
+        await worker.setParameters({
+          tessedit_pageseg_mode: "6",
+          preserve_interword_spaces: "1"
+        });
+        return worker;
+      })
+      .catch((error) => {
+        ocrWorkerPromise = null;
+        throw new Error(`Offline OCR engine could not start: ${error.message}`);
       });
-      return worker;
-    }).catch((error) => {
-      ocrWorkerPromise = null;
-      throw error;
-    });
   }
   return ocrWorkerPromise;
 }
