@@ -174,7 +174,10 @@
 
           // OCR
           try {
-            const ocrRes = await sendMessagePromise({ action: 'RUN_OCR', dataUrl: croppedUrl });
+            const ocrRes = await sendMessagePromise({
+              action: 'RUN_OCR',
+              dataUrl: await prepareOcrImage(croppedUrl)
+            });
             const textArea = document.getElementById('raven-text-area');
 
             if (ocrRes.success && ocrRes.text) {
@@ -210,6 +213,30 @@
       width: Math.abs(ex - startX),
       height: Math.abs(ey - startY)
     };
+  }
+
+  function prepareOcrImage(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(3, Math.max(2, 1600 / Math.max(img.width, img.height)));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.filter = 'grayscale(1) contrast(1.18)';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Could not prepare capture for OCR.'));
+      img.src = dataUrl;
+    });
   }
 
   function deactivate() {

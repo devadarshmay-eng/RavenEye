@@ -1,0 +1,51 @@
+name: Release RavenEye Offline Bundles
+
+on:
+  push:
+    tags:
+      - 'offline-v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build offline Chromium and Firefox bundles
+        run: npm run build:offline
+
+      - name: Package offline bundles
+        run: npm run release:package:offline
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RavenEye v2.0.0 Offline
+          body: |
+            ## RavenEye v2.0.0 Offline
+
+            These bundles require no OCR API endpoint or internet connection after installation.
+            - `raveneye-v2.0.0-chromium.zip`: Chrome, Edge, Brave, and Chromium-based browsers
+            - `raveneye-v2.0.0-firefox.zip`: Firefox
+          files: |
+            dist-artifacts/raveneye-v2.0.0-chromium.zip
+            dist-artifacts/raveneye-v2.0.0-chromium.zip.sha256
+            dist-artifacts/raveneye-v2.0.0-firefox.zip
+            dist-artifacts/raveneye-v2.0.0-firefox.zip.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
