@@ -38,12 +38,10 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.background = browser === 'firefox'
     ? { scripts: ['offline-background.js'] }
     : { service_worker: 'offline-background.js' };
-  manifest.web_accessible_resources = browser === 'firefox'
-    ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']
-    : [{
-        resources: ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*'],
-        matches: ['<all_urls>']
-      }];
+  manifest.web_accessible_resources = [{
+    resources: ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*'],
+    matches: ['<all_urls>']
+  }];
 
   if (browser === 'firefox') {
     manifest.manifest_version = 3;
