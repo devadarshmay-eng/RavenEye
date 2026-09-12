@@ -38,15 +38,23 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.background = browser === 'firefox'
     ? { scripts: ['offline-background.js'] }
     : { service_worker: 'offline-background.js' };
-  manifest.web_accessible_resources = [{
-    resources: ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*'],
-    matches: ['<all_urls>']
-  }];
+  manifest.web_accessible_resources = browser === 'firefox'
+    ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']
+    : [{
+        resources: ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*'],
+        matches: ['<all_urls>']
+      }];
 
   if (browser === 'firefox') {
-    manifest.manifest_version = 3;
-    manifest.permissions = (manifest.permissions || []).filter((permission) => permission !== '<all_urls>');
-    manifest.host_permissions = ['<all_urls>'];
+    manifest.manifest_version = 2;
+    manifest.permissions = [...new Set([
+      ...(manifest.permissions || []).filter((permission) => permission !== 'scripting'),
+      '<all_urls>'
+    ])];
+    delete manifest.host_permissions;
+    delete manifest.content_security_policy;
+    manifest.browser_action = manifest.action;
+    delete manifest.action;
     manifest.browser_specific_settings = {
       gecko: { id: 'raveneye@devadarshmay-eng.github.io', strict_min_version: '109.0' }
     };
