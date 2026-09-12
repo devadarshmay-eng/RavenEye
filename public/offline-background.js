@@ -10,6 +10,20 @@ const DEFAULT_OCR_SETTINGS = {
 
 let ocrWorkerPromise;
 
+function getErrorMessage(error, fallback) {
+  if (typeof error === "string" && error.trim()) return error;
+  if (error && typeof error.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+  try {
+    const serialized = JSON.stringify(error);
+    if (serialized && serialized !== "{}") return serialized;
+  } catch {
+    // Use the fallback for values that cannot be serialized.
+  }
+  return fallback;
+}
+
 function loadTesseract() {
   if (typeof Tesseract !== "undefined") {
     return Promise.resolve();
@@ -134,7 +148,7 @@ function getOcrWorker() {
       })
       .catch((error) => {
         ocrWorkerPromise = null;
-        throw new Error(`Offline OCR engine could not start: ${error.message}`);
+        throw new Error(`Offline OCR engine could not start: ${getErrorMessage(error, "unknown loader error")}`);
       });
   }
   return ocrWorkerPromise;
@@ -153,7 +167,7 @@ async function handleOCR(dataUrl, sendResponse) {
     console.error("[RavenEye] Offline OCR error:", error);
     sendResponse({
       success: false,
-      error: error.message || "Offline OCR failed. Try selecting a clearer, larger text region."
+      error: getErrorMessage(error, "Offline OCR failed. Try selecting a clearer, larger text region.")
     });
   }
 }
