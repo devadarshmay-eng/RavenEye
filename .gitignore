@@ -28,6 +28,8 @@ yarn.lock
 # Build outputs
 dist/
 dist-extension/
+dist-firefox/
+dist-firefox-artifacts/
 *.zip
 *.crx
 *.pem

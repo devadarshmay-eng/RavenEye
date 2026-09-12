@@ -1,6 +1,6 @@
 # RavenEye
 
-RavenEye is a browser extension for Chrome-based browsers that captures any on-screen region and extracts text using OCR.
+RavenEye is a browser extension for Chrome-based browsers and Firefox-based browsers that captures any on-screen region and extracts text using OCR.
 
 [![Version](https://img.shields.io/badge/version-1.0.2-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye/blob/main/LICENSE)
@@ -52,6 +52,17 @@ npm install
 3. Select **Load unpacked**.
 4. Choose the `public/` folder.
 
+For Firefox and Firefox forks (such as LibreWolf or Waterfox), build the Firefox package:
+
+```bash
+npm run build:firefox
+npm run release:package:firefox
+```
+
+Then open `about:debugging#/runtime/this-firefox`, select **Load Temporary Add-on**, and choose
+`dist-firefox/manifest.json`. The generated `dist-firefox-artifacts/raveneye-v<version>-firefox.zip`
+can be submitted to Mozilla Add-ons or installed by a compatible Firefox fork.
+
 ### Build the marketplace bundle
 
 ```bash
@@ -63,6 +74,16 @@ npm run release:package
 
 Zip the **contents** of `dist-extension/` (not the parent folder).  
 Use that ZIP for extension marketplace uploads.
+
+## Firefox Add-ons release
+
+The Firefox build is intentionally separate from the Chrome/Edge bundle. It reuses the same
+extension source files but replaces the Chrome service-worker manifest entry with Firefox's
+background-script entry and adds a stable Gecko extension ID. This keeps Chrome and Edge release
+artifacts unchanged.
+
+Mozilla Add-ons requires a signed XPI for normal end-user installation. Upload the generated
+Firefox ZIP through the Mozilla Add-ons developer portal; Mozilla will sign the submitted package.
 
 ## Edge Add-ons release automation
 
@@ -139,7 +160,7 @@ The screenshot set is ordered for release listings and product walkthrough:
 
 | Layer | Technology |
 |---|---|
-| Extension Platform | Chrome Extensions Manifest V3 |
+| Extension Platform | Chrome/Edge + Firefox Manifest V3 |
 | OCR Endpoint | Configurable OCR relay (server-side secret model) |
 | UI Runtime | React 18 + TypeScript + Vite |
 | Storage | `chrome.storage.sync` |
@@ -149,7 +170,7 @@ The screenshot set is ordered for release listings and product walkthrough:
 
 - Multi-language OCR improvements
 - Capture history and retrieval
-- Firefox compatibility path
+- Firefox Add-ons package and Firefox-fork compatibility
 - OCR post-processing quality enhancements
 
 ## Contributing
