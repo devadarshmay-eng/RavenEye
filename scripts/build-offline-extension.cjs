@@ -36,7 +36,7 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.version = version;
   manifest.description = 'Capture screen regions and extract text locally with private, offline OCR.';
   manifest.background = browser === 'firefox'
-    ? { scripts: ['offline-background.js'] }
+    ? { scripts: ['tesseract.min.js', 'offline-background.js'] }
     : { service_worker: 'offline-background.js' };
   manifest.web_accessible_resources = browser === 'firefox'
     ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']
