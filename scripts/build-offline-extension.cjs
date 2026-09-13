@@ -42,7 +42,8 @@ for (const browser of ['chromium', 'firefox']) {
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
     manifest.content_scripts = (manifest.content_scripts || []).map((contentScript) => ({
       ...contentScript,
-      js: ['content.js', ...(contentScript.js || []).filter((file) => file !== 'content.js')]
+      js: ['tesseract.min.js', 'content.js', ...(contentScript.js || [])
+        .filter((file) => !['content.js', 'tesseract.min.js'].includes(file))]
     }));
   }
   manifest.web_accessible_resources = browser === 'firefox'
