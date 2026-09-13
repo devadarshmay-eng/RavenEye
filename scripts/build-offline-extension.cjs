@@ -40,6 +40,10 @@ for (const browser of ['chromium', 'firefox']) {
     : { service_worker: 'chromium-background.js' };
   if (browser === 'chromium') {
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
+    manifest.content_scripts = (manifest.content_scripts || []).map((contentScript) => ({
+      ...contentScript,
+      js: ['content.js', ...(contentScript.js || []).filter((file) => file !== 'content.js')]
+    }));
   }
   manifest.web_accessible_resources = browser === 'firefox'
     ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']

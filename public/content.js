@@ -39,6 +39,8 @@
     }
   });
 
+  document.addEventListener("raveneye-activate-capture", activateCapture);
+
   async function activateCapture() {
     if (isActive) return;
     init();
