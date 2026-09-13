@@ -7,6 +7,12 @@ function getErrorMessage(error, fallback) {
   if (error && typeof error.message === "string" && error.message.trim()) {
     return error.message;
   }
+  try {
+    const serialized = JSON.stringify(error);
+    if (serialized && serialized !== "{}") return serialized;
+  } catch {
+    // Keep the stable fallback for values that cannot be serialized.
+  }
   return fallback;
 }
 
@@ -77,7 +83,8 @@ function getOcrWorker() {
     ocrWorkerPromise = Tesseract.createWorker("eng", 1, {
       workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
       corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
-      langPath: chrome.runtime.getURL("tessdata")
+      langPath: chrome.runtime.getURL("tessdata"),
+      workerBlobURL: false
     }).then(async (worker) => {
       await worker.setParameters({
         tessedit_pageseg_mode: "6",
