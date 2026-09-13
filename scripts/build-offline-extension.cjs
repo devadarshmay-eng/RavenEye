@@ -42,8 +42,8 @@ for (const browser of ['chromium', 'firefox']) {
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
     manifest.content_scripts = (manifest.content_scripts || []).map((contentScript) => ({
       ...contentScript,
-      js: ['tesseract.min.js', 'content.js', ...(contentScript.js || [])
-        .filter((file) => !['content.js', 'tesseract.min.js'].includes(file))]
+      js: ['tesseract.min.js', 'chromium-content.js', ...(contentScript.js || [])
+        .filter((file) => !['content.js', 'chromium-content.js', 'tesseract.min.js'].includes(file))]
     }));
   }
   manifest.web_accessible_resources = browser === 'firefox'
@@ -80,6 +80,7 @@ for (const browser of ['chromium', 'firefox']) {
     );
     copyFile(path.join(publicDir, 'chromium-ocr.html'), path.join(outputDir, 'chromium-ocr.html'));
     copyFile(path.join(publicDir, 'chromium-ocr.js'), path.join(outputDir, 'chromium-ocr.js'));
+    copyFile(path.join(publicDir, 'content.js'), path.join(outputDir, 'chromium-content.js'));
   } else {
     fs.rmSync(path.join(outputDir, 'chromium-ocr.html'), { force: true });
     fs.rmSync(path.join(outputDir, 'chromium-ocr.js'), { force: true });
