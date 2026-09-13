@@ -149,7 +149,7 @@ async function ensureChromiumOffscreenDocument() {
   if (!offscreenCreationPromise) {
     offscreenCreationPromise = chrome.offscreen.createDocument({
       url: "chromium-ocr.html",
-      reasons: ["BLOBS"],
+      reasons: ["WORKERS"],
       justification: "Run local OCR in a document context that supports Web Workers."
     }).finally(() => {
       offscreenCreationPromise = null;
@@ -162,31 +162,39 @@ async function handleChromiumOCR(dataUrl, sendResponse) {
   try {
     await ensureChromiumOffscreenDocument();
     let settled = false;
+    const port = chrome.runtime.connect({ name: "raveneye-offscreen-ocr" });
     const timeoutId = setTimeout(() => {
       if (settled) return;
       settled = true;
+      port.disconnect();
       sendResponse({
         success: false,
         error: "Chromium OCR timed out. Try selecting a larger or clearer text region."
       });
     }, 60000);
 
-    chrome.runtime.sendMessage({ action: "RUN_OFFSCREEN_OCR", dataUrl }, (response) => {
+    port.onMessage.addListener((response) => {
       if (settled) return;
       settled = true;
       clearTimeout(timeoutId);
-      if (chrome.runtime.lastError) {
-        sendResponse({
-          success: false,
-          error: chrome.runtime.lastError.message || "Chromium OCR document is unavailable."
-        });
-        return;
-      }
+      port.disconnect();
       sendResponse(response || {
         success: false,
         error: "Chromium OCR document returned no response."
       });
     });
+
+    port.onDisconnect.addListener(() => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      sendResponse({
+        success: false,
+        error: "Chromium OCR document disconnected before returning text."
+      });
+    });
+
+    port.postMessage({ action: "RUN_OFFSCREEN_OCR", dataUrl });
   } catch (error) {
     sendResponse({
       success: false,
