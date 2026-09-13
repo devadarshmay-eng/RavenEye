@@ -9,6 +9,7 @@ const DEFAULT_OCR_SETTINGS = {
 };
 
 let ocrWorkerPromise;
+let offscreenCreationPromise;
 
 function getErrorMessage(error, fallback) {
   if (typeof error === "string" && error.trim()) return error;
@@ -114,6 +115,54 @@ function getOcrWorker() {
       return Promise.reject(new Error("The bundled offline OCR engine was not loaded."));
     }
 
+    async function ensureChromiumOffscreenDocument() {
+      if (!chrome.offscreen) {
+        throw new Error("This Chromium browser does not support the offline OCR document.");
+      }
+
+      const offscreenUrl = chrome.runtime.getURL("chromium-ocr.html");
+      const contexts = await chrome.runtime.getContexts({
+        contextTypes: ["OFFSCREEN_DOCUMENT"],
+        documentUrls: [offscreenUrl]
+      });
+      if (contexts.length > 0) return;
+
+      if (!offscreenCreationPromise) {
+        offscreenCreationPromise = chrome.offscreen.createDocument({
+          url: "chromium-ocr.html",
+          reasons: ["BLOBS"],
+          justification: "Run local OCR in a document context that supports Web Workers."
+        }).finally(() => {
+          offscreenCreationPromise = null;
+        });
+      }
+      await offscreenCreationPromise;
+    }
+
+    async function handleChromiumOCR(dataUrl, sendResponse) {
+      try {
+        await ensureChromiumOffscreenDocument();
+        chrome.runtime.sendMessage({ action: "RUN_OFFSCREEN_OCR", dataUrl }, (response) => {
+          if (chrome.runtime.lastError) {
+            sendResponse({
+              success: false,
+              error: chrome.runtime.lastError.message || "Chromium OCR document is unavailable."
+            });
+            return;
+          }
+          sendResponse(response || {
+            success: false,
+            error: "Chromium OCR document returned no response."
+          });
+        });
+      } catch (error) {
+        sendResponse({
+          success: false,
+          error: getErrorMessage(error, "Could not start the Chromium offline OCR document.")
+        });
+      }
+    }
+
     ocrWorkerPromise = Tesseract.createWorker("eng", 1, {
       workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
       corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
@@ -171,6 +220,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (message.action === "RUN_OCR") {
+    if (chrome.offscreen) {
+      handleChromiumOCR(message.dataUrl, sendResponse);
+      return true;
+    }
     handleOCR(message.dataUrl, sendResponse);
     return true;
   }

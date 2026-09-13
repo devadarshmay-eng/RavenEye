@@ -38,6 +38,9 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.background = browser === 'firefox'
     ? { scripts: ['tesseract.min.js', 'offline-background.js'] }
     : { service_worker: 'chromium-background.js' };
+  if (browser === 'chromium') {
+    manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
+  }
   manifest.web_accessible_resources = browser === 'firefox'
     ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']
     : [{
@@ -70,6 +73,11 @@ for (const browser of ['chromium', 'firefox']) {
       path.join(publicDir, 'chromium-background.js'),
       path.join(outputDir, 'chromium-background.js')
     );
+    copyFile(path.join(publicDir, 'chromium-ocr.html'), path.join(outputDir, 'chromium-ocr.html'));
+    copyFile(path.join(publicDir, 'chromium-ocr.js'), path.join(outputDir, 'chromium-ocr.js'));
+  } else {
+    fs.rmSync(path.join(outputDir, 'chromium-ocr.html'), { force: true });
+    fs.rmSync(path.join(outputDir, 'chromium-ocr.js'), { force: true });
   }
 
   const popupPath = path.join(outputDir, 'popup.html');
