@@ -1,2 +1,2 @@
 // Chromium service worker entry point.
-importScripts("tesseract.min.js", "offline-background.js");
+importScripts("offline-background.js");
