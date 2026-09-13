@@ -83,7 +83,9 @@ document.addEventListener("DOMContentLoaded", () => {
       Promise.all([
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          files: chrome.offscreen ? ["tesseract.min.js", "chromium-content.js"] : ["content.js"]
+          files: isOfflineOcr
+            ? ["tesseract.min.js", "chromium-content.js"]
+            : ["content.js"]
         }),
         chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ["raven-styles.css"] })
       ]).then(() => {

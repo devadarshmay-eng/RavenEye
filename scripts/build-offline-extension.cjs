@@ -5,7 +5,6 @@ const root = path.resolve(__dirname, '..');
 const publicDir = path.join(root, 'public');
 const outputRoot = path.join(root, 'dist-offline');
 const packagePath = path.join(root, 'package.json');
-const version = '2.0.0';
 
 function copyDir(source, destination) {
   fs.mkdirSync(destination, { recursive: true });
@@ -23,6 +22,7 @@ function copyFile(source, destination) {
 }
 
 const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+const version = pkg.version;
 if (!fs.existsSync(publicDir)) throw new Error('public directory is missing.');
 
 fs.rmSync(outputRoot, { recursive: true, force: true });
@@ -37,13 +37,13 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.description = 'Capture screen regions and extract text locally with private, offline OCR.';
   manifest.background = browser === 'firefox'
     ? { scripts: ['tesseract.min.js', 'offline-background.js'] }
-    : { service_worker: 'chromium-background.js' };
+    : { service_worker: 'offline-background.js' };
   if (browser === 'chromium') {
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
     manifest.content_scripts = (manifest.content_scripts || []).map((contentScript) => ({
       ...contentScript,
-      js: ['tesseract.min.js', 'chromium-content.js', ...(contentScript.js || [])
-        .filter((file) => !['content.js', 'chromium-content.js', 'tesseract.min.js'].includes(file))]
+      js: ['shortcut-listener.js', 'tesseract.min.js', 'chromium-content.js', ...(contentScript.js || [])
+        .filter((file) => !['content.js', 'chromium-content.js', 'tesseract.min.js', 'shortcut-listener.js'].includes(file))]
     }));
   }
   manifest.web_accessible_resources = browser === 'firefox'

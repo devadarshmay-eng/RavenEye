@@ -60,17 +60,21 @@ function sendTabMessage(tabId, payload) {
 }
 
 async function injectCaptureAssets(tabId) {
-  const contentScript = chrome.offscreen ? "chromium-content.js" : "content.js";
+  const manifest = chrome.runtime.getManifest();
+  const isChromiumOfflineBundle = manifest.background?.service_worker === "offline-background.js";
+  const contentScripts = isChromiumOfflineBundle
+    ? ["tesseract.min.js", "chromium-content.js"]
+    : ["content.js"];
   if (chrome.scripting) {
     await Promise.all([
-      chrome.scripting.executeScript({ target: { tabId }, files: [contentScript] }),
+      chrome.scripting.executeScript({ target: { tabId }, files: contentScripts }),
       chrome.scripting.insertCSS({ target: { tabId }, files: ["raven-styles.css"] })
     ]);
     return;
   }
 
   await new Promise((resolve, reject) => {
-    chrome.tabs.executeScript(tabId, { file: contentScript }, () => {
+    chrome.tabs.executeScript(tabId, { file: contentScripts[contentScripts.length - 1] }, () => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
         return;
@@ -257,7 +261,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (message.action === "RUN_OCR") {
-    if (chrome.offscreen) {
+    if (chrome.offscreen?.createDocument && chrome.runtime.getContexts) {
       handleChromiumOCR(message.dataUrl, sendResponse);
       return true;
     }
