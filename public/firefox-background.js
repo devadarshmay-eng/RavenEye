@@ -80,11 +80,23 @@ function getOcrWorker() {
       return Promise.reject(new Error("The bundled offline OCR engine was not loaded."));
     }
 
-    ocrWorkerPromise = Tesseract.createWorker("eng", 1, {
+    const workerOptions = {
       workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
       corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
-      langPath: chrome.runtime.getURL("tessdata"),
-      workerBlobURL: false
+      langPath: `${chrome.runtime.getURL("tessdata")}/`
+    };
+
+    const createWorker = (workerBlobURL) => Tesseract.createWorker("eng", 1, {
+      ...workerOptions,
+      workerBlobURL
+    });
+
+    ocrWorkerPromise = createWorker(false).catch((directWorkerError) => {
+      // Firefox can reject a direct extension URL as a worker while allowing
+      // a blob bootstrap that imports the same extension resource.
+      return createWorker(true).catch(() => {
+        throw directWorkerError;
+      });
     }).then(async (worker) => {
       await worker.setParameters({
         tessedit_pageseg_mode: "6",
