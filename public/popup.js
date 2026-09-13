@@ -81,7 +81,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       Promise.all([
-        chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] }),
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: chrome.offscreen ? ["tesseract.min.js", "content.js"] : ["content.js"]
+        }),
         chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ["raven-styles.css"] })
       ]).then(() => {
         chrome.tabs.sendMessage(tab.id, { action: "ACTIVATE_CAPTURE" }, () => {
