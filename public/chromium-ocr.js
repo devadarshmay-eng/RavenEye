@@ -1,4 +1,5 @@
 let workerPromise;
+const requests = new Map();
 
 function errorMessage(error) {
   if (typeof error === "string" && error.trim()) return error;
@@ -27,17 +28,39 @@ function getWorker() {
   return workerPromise;
 }
 
+function runOcr(message, sendResponse) {
+  const requestId = message.requestId || `legacy-${Date.now()}`;
+  if (requests.has(requestId)) {
+    requests.get(requestId).then(sendResponse);
+    return true;
+  }
+
+  const resultPromise = getWorker()
+    .then((worker) => worker.recognize(message.dataUrl))
+    .then((result) => ({ success: true, text: result.data.text.trim() }))
+    .catch((error) => ({
+      success: false,
+      error: `Chromium offline OCR failed: ${errorMessage(error)}`
+    }));
+  requests.set(requestId, resultPromise);
+  resultPromise.then((response) => {
+    requests.delete(requestId);
+    sendResponse(response);
+  });
+  return true;
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.target !== "raveneye-offscreen" || message.action !== "RUN_OFFSCREEN_OCR") {
     return false;
   }
+  return runOcr(message, sendResponse);
+});
 
-  getWorker()
-    .then((worker) => worker.recognize(message.dataUrl))
-    .then((result) => sendResponse({ success: true, text: result.data.text.trim() }))
-    .catch((error) => sendResponse({
-        success: false,
-        error: `Chromium offline OCR failed: ${errorMessage(error)}`
-    }));
-  return true;
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "raveneye-offscreen-ocr") return;
+  port.onMessage.addListener((message) => {
+    if (message.action !== "RUN_OFFSCREEN_OCR") return;
+    runOcr(message, (response) => port.postMessage(response));
+  });
 });
