@@ -15,6 +15,42 @@
     });
   }
 
+  async function runOcr(dataUrl) {
+    if (typeof Tesseract !== 'undefined' && typeof Tesseract.createWorker === 'function') {
+      if (!chromiumOcrWorkerPromise) {
+        chromiumOcrWorkerPromise = Tesseract.createWorker('eng', 1, {
+          workerPath: chrome.runtime.getURL('tesseract-worker.min.js'),
+          corePath: chrome.runtime.getURL('tesseract-core.wasm.js'),
+          langPath: chrome.runtime.getURL('tessdata'),
+          workerBlobURL: false
+        }).then(async (worker) => {
+          await worker.setParameters({
+            tessedit_pageseg_mode: '6',
+            preserve_interword_spaces: '1'
+          });
+          return worker;
+        }).catch((error) => {
+          chromiumOcrWorkerPromise = null;
+          throw error;
+        });
+      }
+
+      try {
+        const worker = await chromiumOcrWorkerPromise;
+        const result = await worker.recognize(dataUrl);
+        return { success: true, text: result.data.text.trim() };
+      } catch (error) {
+        chromiumOcrWorkerPromise = null;
+        return {
+          success: false,
+          error: `Chromium offline OCR failed: ${error?.message || String(error)}`
+        };
+      }
+    }
+
+    return sendMessagePromise({ action: 'RUN_OCR', dataUrl });
+  }
+
   // Settings Loader
   function loadSettings() {
     return new Promise((resolve) => {
@@ -230,41 +266,6 @@
           return;
         }
 
-        async function runOcr(dataUrl) {
-          if (typeof Tesseract !== 'undefined' && typeof Tesseract.createWorker === 'function') {
-            if (!chromiumOcrWorkerPromise) {
-              chromiumOcrWorkerPromise = Tesseract.createWorker('eng', 1, {
-                workerPath: chrome.runtime.getURL('tesseract-worker.min.js'),
-                corePath: chrome.runtime.getURL('tesseract-core.wasm.js'),
-                langPath: chrome.runtime.getURL('tessdata'),
-                workerBlobURL: false
-              }).then(async (worker) => {
-                await worker.setParameters({
-                  tessedit_pageseg_mode: '6',
-                  preserve_interword_spaces: '1'
-                });
-                return worker;
-              }).catch((error) => {
-                chromiumOcrWorkerPromise = null;
-                throw error;
-              });
-            }
-
-            try {
-              const worker = await chromiumOcrWorkerPromise;
-              const result = await worker.recognize(dataUrl);
-              return { success: true, text: result.data.text.trim() };
-            } catch (error) {
-              chromiumOcrWorkerPromise = null;
-              return {
-                success: false,
-                error: `Chromium offline OCR failed: ${error?.message || String(error)}`
-              };
-            }
-          }
-
-          return sendMessagePromise({ action: 'RUN_OCR', dataUrl });
-        }
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.filter = 'grayscale(1) contrast(1.18)';
