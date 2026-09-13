@@ -533,7 +533,7 @@
             <div class="step-card">
                 <div class="step-number">2</div>
                 <h3>Open a page with text</h3>
-                <p>Go to any website, document, or visual content where text is visible. Make sure OCR Relay URL is configured in settings.</p>
+                <p>Go to any website, document, or visual content where text is visible. In v1.0.3, configure an OCR Relay URL; the v2.0.0 offline bundles need no endpoint.</p>
             </div>
             <div class="step-card">
                 <div class="step-number">3</div>
@@ -552,7 +552,7 @@
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">⚡</div>
                 <h3>Lightning Fast OCR</h3>
-                <p>Extract text from any screen region in seconds using your configured OCR relay endpoint.</p>
+                <p>Extract text from any screen region in seconds using the configured relay (v1.0.3) or bundled local OCR (v2.0.0).</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon" style="background: transparent; border: none; font-size: 2rem;">🎯</div>
@@ -630,7 +630,7 @@
                         <span class="accordion-icon">▼</span>
                     </button>
                     <div class="accordion-content">
-                        <p>No. OCR processing uses a cloud service endpoint, so an internet connection is required.</p>
+                        <p>Only the v1.0.3 API release requires an internet connection and OCR relay endpoint. The v2.0.0 Chromium and Firefox bundles process English text locally.</p>
                     </div>
                 </div>
                 <div class="accordion-item">
@@ -663,7 +663,7 @@
             <h3>2. Data Sharing</h3>
             <p>RavenEye shares data only with services necessary for core functionality:</p>
             <ul>
-                <li><strong>OCR Relay Endpoint:</strong> Screen captures are sent to the relay URL you configure for text extraction.</li>
+                <li><strong>OCR processing:</strong> v1.0.3 sends captures to your configured relay; v2.0.0 keeps captures local with bundled Tesseract.js.</li>
                 <li><strong>No Third-Party Analytics:</strong> We do not use Google Analytics, tracking pixels, or any third-party analytics services.</li>
             </ul>
 

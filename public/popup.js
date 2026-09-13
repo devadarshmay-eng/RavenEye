@@ -12,8 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.getElementById("themeToggle");
   const ocrRelayUrlInput = document.getElementById("ocrRelayUrlInput");
   const toast = document.getElementById("saved-toast");
+  const isOfflineOcr = document.documentElement.dataset.ocrMode === "offline";
 
-  if (!captureBtn || !dimSlider || !blurSlider || !dimVal || !blurVal || !saveImageToggle || !autoCopyToggle || !themeToggle || !ocrRelayUrlInput || !toast) {
+  if (!captureBtn || !dimSlider || !blurSlider || !dimVal || !blurVal || !saveImageToggle || !autoCopyToggle || !themeToggle || (!isOfflineOcr && !ocrRelayUrlInput) || !toast) {
     return;
   }
 
@@ -44,7 +45,13 @@ document.addEventListener("DOMContentLoaded", () => {
     saveImageToggle.checked = settings.saveImage;
     autoCopyToggle.checked = settings.autoCopy;
     applyTheme(settings.theme);
-    ocrRelayUrlInput.value = typeof settings.ocrRelayUrl === "string" ? settings.ocrRelayUrl : "";
+    if (ocrRelayUrlInput) {
+      ocrRelayUrlInput.value = typeof settings.ocrRelayUrl === "string" ? settings.ocrRelayUrl : "";
+    }
+    if (isOfflineOcr) {
+      const relaySettings = document.getElementById("ocrRelaySettings");
+      if (relaySettings) relaySettings.hidden = true;
+    }
   });
 
   captureBtn.addEventListener("click", () => {
@@ -52,18 +59,46 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.runtime.sendMessage({ action: "ACTIVATE_FROM_POPUP" }, (response) => {
       captureBtn.disabled = false;
       if (chrome.runtime.lastError) {
-        showToast(`❌ ${chrome.runtime.lastError.message}`);
+        activateCaptureFromPopup();
         return;
       }
 
       if (!response || !response.success) {
-        showToast(`❌ ${response?.error || "Capture could not start. Open a normal website and try again."}`);
+        activateCaptureFromPopup(response?.error);
         return;
       }
 
       window.close();
     });
   });
+
+  function activateCaptureFromPopup(backgroundError) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      if (!tab || typeof tab.id !== "number") {
+        showToast(`❌ ${backgroundError || "No active tab found."}`);
+        return;
+      }
+
+      Promise.all([
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: chrome.offscreen ? ["tesseract.min.js", "chromium-content.js"] : ["content.js"]
+        }),
+        chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ["raven-styles.css"] })
+      ]).then(() => {
+        chrome.tabs.sendMessage(tab.id, { action: "ACTIVATE_CAPTURE" }, () => {
+          if (chrome.runtime.lastError) {
+            showToast(`❌ ${chrome.runtime.lastError.message}`);
+            return;
+          }
+          window.close();
+        });
+      }).catch((error) => {
+        showToast(`❌ ${error.message || backgroundError || "Capture could not start."}`);
+      });
+    });
+  }
 
   dimSlider.addEventListener("input", () => {
     dimVal.textContent = `${dimSlider.value}%`;
@@ -78,10 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
   saveImageToggle.addEventListener("change", saveSettings);
   autoCopyToggle.addEventListener("change", saveSettings);
   themeToggle.addEventListener("change", saveSettings);
-  ocrRelayUrlInput.addEventListener("change", saveSettings);
+  if (ocrRelayUrlInput) ocrRelayUrlInput.addEventListener("change", saveSettings);
 
   function saveSettings() {
-    const relayUrl = ocrRelayUrlInput.value.trim();
+    const relayUrl = ocrRelayUrlInput ? ocrRelayUrlInput.value.trim() : "";
     if (relayUrl) {
       try {
         const parsed = new URL(relayUrl);

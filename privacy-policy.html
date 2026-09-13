@@ -68,7 +68,7 @@
         
         <h2>1. Information We Collect</h2>
         <p><strong class="highlight">We do NOT collect or store personal information on developer-controlled infrastructure.</strong></p>
-        <p>RavenEye runs in your browser and only sends screenshots to the OCR relay endpoint you configure for text extraction.</p>
+        <p>The v1.0.3 API release sends screenshots only to the OCR relay endpoint you configure. The v2.0.0 Chromium and Firefox offline releases process captures locally with bundled Tesseract.js and do not send screenshots to any endpoint.</p>
         
         <h2>2. Data Stored Locally on Your Device</h2>
         <p>The extension stores the following data <strong>only on your device</strong> using Chrome's secure storage API (chrome.storage.sync):</p>
@@ -97,6 +97,7 @@
             <li><strong>Data Retention:</strong> Controlled by your relay and OCR provider policy</li>
             <li><strong>Endpoint:</strong> Configurable in RavenEye settings (example: <code>https://your-domain.com/api/ocr</code>)</li>
         </ul>
+        <p><strong>Offline release:</strong> The v2.0.0 offline bundles include the OCR engine and English model locally. Captures remain in the browser and no OCR relay endpoint is required.</p>
         
         <h2>4. Permissions Explained</h2>
         <p>RavenEye requests the following browser permissions. Here's why each is necessary:</p>
@@ -185,8 +186,8 @@
         <p><strong>In plain English:</strong></p>
         <ol>
             <li>We don't collect your personal data - everything stays on your device</li>
-            <li>Set your OCR relay URL in RavenEye settings before first OCR use</li>
-            <li>Screenshots are sent only to your configured OCR relay endpoint for processing</li>
+            <li>For v1.0.3, set your OCR relay URL before first OCR use; v2.0.0 offline bundles need no endpoint</li>
+            <li>v1.0.3 sends screenshots only to your configured OCR relay; v2.0.0 keeps them local</li>
             <li>We don't track you, use analytics, or serve ads</li>
             <li>You can delete all data by uninstalling the extension</li>
             <li>The code is open source - you can verify everything</li>
