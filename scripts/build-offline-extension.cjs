@@ -37,7 +37,7 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.description = 'Capture screen regions and extract text locally with private, offline OCR.';
   manifest.background = browser === 'firefox'
     ? { scripts: ['tesseract.min.js', 'offline-background.js'] }
-    : { service_worker: 'offline-background.js' };
+    : { service_worker: 'chromium-background.js' };
   manifest.web_accessible_resources = browser === 'firefox'
     ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']
     : [{
@@ -62,8 +62,15 @@ for (const browser of ['chromium', 'firefox']) {
 
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   fs.rmSync(path.join(outputDir, 'background.js'), { force: true });
+  fs.rmSync(path.join(outputDir, 'chromium-background.js'), { force: true });
   fs.rmSync(path.join(outputDir, 'offline-background.js'), { force: false });
   copyFile(path.join(publicDir, 'offline-background.js'), path.join(outputDir, 'offline-background.js'));
+  if (browser === 'chromium') {
+    copyFile(
+      path.join(publicDir, 'chromium-background.js'),
+      path.join(outputDir, 'chromium-background.js')
+    );
+  }
 
   const popupPath = path.join(outputDir, 'popup.html');
   let popup = fs.readFileSync(popupPath, 'utf8');
