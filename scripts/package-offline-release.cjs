@@ -6,7 +6,8 @@ const cp = require('child_process');
 const root = path.resolve(__dirname, '..');
 const sourceRoot = path.join(root, 'dist-offline');
 const outputDir = path.join(root, 'dist-artifacts');
-const version = '2.0.0';
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const version = packageJson.version;
 
 if (!fs.existsSync(sourceRoot)) {
   throw new Error('[release:package:offline] dist-offline does not exist. Run npm run build:offline first.');
