@@ -42,7 +42,7 @@ for (const browser of ['chromium', 'firefox']) {
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
     manifest.content_scripts = (manifest.content_scripts || []).map((contentScript) => ({
       ...contentScript,
-      js: ['shortcut-listener.js', 'tesseract.min.js', 'chromium-content.js', ...(contentScript.js || [])
+      js: ['shortcut-listener.js', ...(contentScript.js || [])
         .filter((file) => !['content.js', 'chromium-content.js', 'tesseract.min.js', 'shortcut-listener.js'].includes(file))]
     }));
   }
@@ -74,13 +74,8 @@ for (const browser of ['chromium', 'firefox']) {
   fs.rmSync(path.join(outputDir, 'offline-background.js'), { force: false });
   copyFile(path.join(publicDir, 'offline-background.js'), path.join(outputDir, 'offline-background.js'));
   if (browser === 'chromium') {
-    copyFile(
-      path.join(publicDir, 'chromium-background.js'),
-      path.join(outputDir, 'chromium-background.js')
-    );
     copyFile(path.join(publicDir, 'chromium-ocr.html'), path.join(outputDir, 'chromium-ocr.html'));
     copyFile(path.join(publicDir, 'chromium-ocr.js'), path.join(outputDir, 'chromium-ocr.js'));
-    copyFile(path.join(publicDir, 'content.js'), path.join(outputDir, 'chromium-content.js'));
   } else {
     fs.rmSync(path.join(outputDir, 'chromium-ocr.html'), { force: true });
     fs.rmSync(path.join(outputDir, 'chromium-ocr.js'), { force: true });

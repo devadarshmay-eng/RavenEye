@@ -60,11 +60,7 @@ function sendTabMessage(tabId, payload) {
 }
 
 async function injectCaptureAssets(tabId) {
-  const manifest = chrome.runtime.getManifest();
-  const isChromiumOfflineBundle = manifest.background?.service_worker === "offline-background.js";
-  const contentScripts = isChromiumOfflineBundle
-    ? ["tesseract.min.js", "chromium-content.js"]
-    : ["content.js"];
+  const contentScripts = ["content.js"];
   if (chrome.scripting) {
     await Promise.all([
       chrome.scripting.executeScript({ target: { tabId }, files: contentScripts }),
