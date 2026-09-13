@@ -59,18 +59,46 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.runtime.sendMessage({ action: "ACTIVATE_FROM_POPUP" }, (response) => {
       captureBtn.disabled = false;
       if (chrome.runtime.lastError) {
-        showToast(`❌ ${chrome.runtime.lastError.message}`);
+        activateCaptureFromPopup();
         return;
       }
 
       if (!response || !response.success) {
-        showToast(`❌ ${response?.error || "Capture could not start. Open a normal website and try again."}`);
+        activateCaptureFromPopup(response?.error);
         return;
       }
 
       window.close();
     });
   });
+
+  function activateCaptureFromPopup(backgroundError) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      if (!tab || typeof tab.id !== "number") {
+        showToast(`❌ ${backgroundError || "No active tab found."}`);
+        return;
+      }
+
+      Promise.all([
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: chrome.offscreen ? ["tesseract.min.js", "chromium-content.js"] : ["content.js"]
+        }),
+        chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ["raven-styles.css"] })
+      ]).then(() => {
+        chrome.tabs.sendMessage(tab.id, { action: "ACTIVATE_CAPTURE" }, () => {
+          if (chrome.runtime.lastError) {
+            showToast(`❌ ${chrome.runtime.lastError.message}`);
+            return;
+          }
+          window.close();
+        });
+      }).catch((error) => {
+        showToast(`❌ ${error.message || backgroundError || "Capture could not start."}`);
+      });
+    });
+  }
 
   dimSlider.addEventListener("input", () => {
     dimVal.textContent = `${dimSlider.value}%`;
