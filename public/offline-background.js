@@ -60,16 +60,17 @@ function sendTabMessage(tabId, payload) {
 }
 
 async function injectCaptureAssets(tabId) {
+  const contentScript = chrome.offscreen ? "chromium-content.js" : "content.js";
   if (chrome.scripting) {
     await Promise.all([
-      chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] }),
+      chrome.scripting.executeScript({ target: { tabId }, files: [contentScript] }),
       chrome.scripting.insertCSS({ target: { tabId }, files: ["raven-styles.css"] })
     ]);
     return;
   }
 
   await new Promise((resolve, reject) => {
-    chrome.tabs.executeScript(tabId, { file: "content.js" }, () => {
+    chrome.tabs.executeScript(tabId, { file: contentScript }, () => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
         return;
