@@ -213,7 +213,10 @@
 
           // OCR
           try {
-            const ocrRes = await runOcr(await prepareOcrImage(croppedUrl));
+            const ocrImage = await prepareOcrImage(croppedUrl);
+            const ocrRes = typeof runOcr === 'function'
+              ? await runOcr(ocrImage)
+              : await sendMessagePromise({ action: 'RUN_OCR', dataUrl: ocrImage });
             const textArea = document.getElementById('raven-text-area');
 
             if (ocrRes.success && ocrRes.text) {
