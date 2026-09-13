@@ -27,18 +27,17 @@ function getWorker() {
   return workerPromise;
 }
 
-chrome.runtime.onConnect.addListener((port) => {
-  if (port.name !== "raveneye-offscreen-ocr") return;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.target !== "raveneye-offscreen" || message.action !== "RUN_OFFSCREEN_OCR") {
+    return false;
+  }
 
-  port.onMessage.addListener((message) => {
-    if (message.action !== "RUN_OFFSCREEN_OCR") return;
-
-    getWorker()
-      .then((worker) => worker.recognize(message.dataUrl))
-      .then((result) => port.postMessage({ success: true, text: result.data.text.trim() }))
-      .catch((error) => port.postMessage({
+  getWorker()
+    .then((worker) => worker.recognize(message.dataUrl))
+    .then((result) => sendResponse({ success: true, text: result.data.text.trim() }))
+    .catch((error) => sendResponse({
         success: false,
         error: `Chromium offline OCR failed: ${errorMessage(error)}`
-      }));
-  });
+    }));
+  return true;
 });
