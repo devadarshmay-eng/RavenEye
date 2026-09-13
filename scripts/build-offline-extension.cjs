@@ -36,7 +36,7 @@ for (const browser of ['chromium', 'firefox']) {
   manifest.version = version;
   manifest.description = 'Capture screen regions and extract text locally with private, offline OCR.';
   manifest.background = browser === 'firefox'
-    ? { scripts: ['tesseract.min.js', 'offline-background.js'] }
+    ? { scripts: ['tesseract.min.js', 'firefox-background.js'] }
     : { service_worker: 'offline-background.js' };
   if (browser === 'chromium') {
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
@@ -64,19 +64,25 @@ for (const browser of ['chromium', 'firefox']) {
     manifest.browser_action = manifest.action;
     delete manifest.action;
     manifest.browser_specific_settings = {
-      gecko: { id: 'raveneye@devadarshmay-eng.github.io', strict_min_version: '109.0' }
+      gecko: {
+        id: 'raveneye@devadarshmay-eng.github.io',
+        strict_min_version: '140.0',
+        data_collection_permissions: {
+          required: ['none']
+        }
+      }
     };
   }
 
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   fs.rmSync(path.join(outputDir, 'background.js'), { force: true });
   fs.rmSync(path.join(outputDir, 'chromium-background.js'), { force: true });
-  fs.rmSync(path.join(outputDir, 'offline-background.js'), { force: false });
-  copyFile(path.join(publicDir, 'offline-background.js'), path.join(outputDir, 'offline-background.js'));
+  fs.rmSync(path.join(outputDir, 'offline-background.js'), { force: true });
   if (browser === 'chromium') {
     copyFile(path.join(publicDir, 'chromium-ocr.html'), path.join(outputDir, 'chromium-ocr.html'));
     copyFile(path.join(publicDir, 'chromium-ocr.js'), path.join(outputDir, 'chromium-ocr.js'));
   } else {
+    copyFile(path.join(publicDir, 'firefox-background.js'), path.join(outputDir, 'firefox-background.js'));
     fs.rmSync(path.join(outputDir, 'chromium-ocr.html'), { force: true });
     fs.rmSync(path.join(outputDir, 'chromium-ocr.js'), { force: true });
   }
