@@ -60,7 +60,7 @@ for (const browser of ['chromium', 'firefox']) {
       '<all_urls>'
     ])];
     delete manifest.host_permissions;
-    delete manifest.content_security_policy;
+    manifest.content_security_policy = "script-src 'self'; object-src 'self'; worker-src 'self';";
     manifest.browser_action = manifest.action;
     delete manifest.action;
     manifest.browser_specific_settings = {

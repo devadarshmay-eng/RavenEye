@@ -7,6 +7,10 @@ function getErrorMessage(error, fallback) {
   if (error && typeof error.message === "string" && error.message.trim()) {
     return error.message;
   }
+  if (error && typeof error.type === "string") {
+    const location = error.filename ? ` (${error.filename}:${error.lineno || 0})` : "";
+    return `${error.type}${location}`;
+  }
   try {
     const serialized = JSON.stringify(error);
     if (serialized && serialized !== "{}") return serialized;
@@ -94,8 +98,11 @@ function getOcrWorker() {
     ocrWorkerPromise = createWorker(false).catch((directWorkerError) => {
       // Firefox can reject a direct extension URL as a worker while allowing
       // a blob bootstrap that imports the same extension resource.
-      return createWorker(true).catch(() => {
-        throw directWorkerError;
+      return createWorker(true).catch((blobWorkerError) => {
+        throw new Error(
+          `Firefox OCR worker could not start. Direct worker: ${getErrorMessage(directWorkerError, "unknown error")}. ` +
+          `Blob worker: ${getErrorMessage(blobWorkerError, "unknown error")}`
+        );
       });
     }).then(async (worker) => {
       await worker.setParameters({
