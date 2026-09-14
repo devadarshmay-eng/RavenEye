@@ -1,14 +1,16 @@
 {
   "name": "raven-eye",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/build-extension.cjs",
     "build:extension": "node scripts/build-extension.cjs",
+    "build:offline": "node scripts/build-offline-extension.cjs",
     "release:validate": "node scripts/validate-release.cjs",
     "release:package": "node scripts/package-release.cjs",
+    "release:package:offline": "node scripts/package-offline-release.cjs",
     "release:media": "node scripts/generate-listing-media.mjs",
     "release:marketing": "node scripts/generate-launch-bundle.cjs",
     "release:edge": "node scripts/edge-publish.cjs",
@@ -21,13 +23,16 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toast": "^1.1.5",
+    "@tesseract.js-data/eng": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^6.0.1",
+    "@tesseract.js-data/eng": "^1.0.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.21",

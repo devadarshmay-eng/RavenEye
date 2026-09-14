@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const distExtension = path.join(root, 'dist-extension');
 const outputDir = path.join(root, 'dist-artifacts');
-const zipName = `raveneye-v${pkg.version}.zip`;
+const zipName = `raveneye-v${pkg.version}-api.zip`;
 const zipPath = path.join(outputDir, zipName);
 const checksumPath = `${zipPath}.sha256`;
 

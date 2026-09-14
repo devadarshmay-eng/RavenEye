@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-ocr-mode="relay">
 
 <head>
   <meta charset="UTF-8" />
@@ -39,8 +39,8 @@
     }
 
     body {
-      width: 340px;
-      background: var(--bg);
+      width: 380px;
+      background: #000000;
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       font-size: 13px;
@@ -50,8 +50,8 @@
 
     /* Header */
     .header {
-      padding: 16px 20px;
-      background: var(--surface);
+      padding: 14px 20px;
+      background: #000000;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -64,29 +64,8 @@
       gap: 10px;
     }
 
-    .logo-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, var(--accent), #6366f1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      color: white;
-      box-shadow: 0 4px 12px var(--accent-glow);
-    }
-
-    /* If logo image exists, use it instead of emoji */
-    .logo-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
     .brand-text h1 {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: -0.01em;
       color: var(--text-main);
@@ -118,7 +97,7 @@
     .capture-btn {
       width: 100%;
       padding: 12px;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      background: #834dfb;
       color: white;
       border: none;
       border-radius: 12px;
@@ -135,7 +114,8 @@
 
     .capture-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+      background: #7238e5;
+      box-shadow: none;
     }
 
     .capture-btn:active {
@@ -162,6 +142,14 @@
       padding: 0 20px 20px;
     }
 
+    .settings-container > .section-title {
+      margin-top: 20px;
+    }
+
+    .settings-container > .section-title:first-child {
+      margin-top: 0;
+    }
+
     .section-title {
       font-size: 10px;
       text-transform: uppercase;
@@ -176,6 +164,26 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
+    }
+
+    .settings-container > .section-title + .setting-item,
+    .settings-container > .section-title + .setting-item + .setting-item {
+      padding: 12px 14px;
+      margin-bottom: 0;
+      background: rgba(39, 39, 42, 0.5);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .settings-container > .section-title + .setting-item {
+      border-top: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .settings-container > .section-title + .setting-item + .setting-item {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0 0 12px 12px;
     }
 
     .setting-item.stacked {
@@ -316,6 +324,10 @@
       outline: none;
     }
 
+    .settings-container .section-title[style*="Preferences"] ~ .setting-item {
+      background: rgba(39, 39, 42, 0.5);
+    }
+
     .text-input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 1px var(--accent-glow);
@@ -399,15 +411,12 @@
 
   <div class="header">
     <div class="brand">
-      <div class="logo-icon">
-        <img src="icons/icon128.png" alt="RavenEye Logo">
-      </div>
       <div class="brand-text">
         <h1>RavenEye</h1>
         <span>Text Extractor</span>
       </div>
     </div>
-    <div class="version">v1.0.2</div>
+    <div class="version">v__RAVENEYE_VERSION__</div>
   </div>
 
   <div class="hero-action">
@@ -447,7 +456,7 @@
     </div>
 
     <div class="section-title" style="margin-top: 20px;">OCR Engine</div>
-    <div style="padding: 10px 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px;">
+    <div id="ocrRelaySettings" style="padding: 10px 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px;">
       <div style="font-size: 12px; font-weight: 600; color: var(--text-main);">Secure Relay OCR</div>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
         Configure your backend OCR relay URL. Keep provider secrets on the server only.

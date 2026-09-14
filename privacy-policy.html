@@ -68,10 +68,10 @@
         
         <h2>1. Information We Collect</h2>
         <p><strong class="highlight">We do NOT collect or store personal information on developer-controlled infrastructure.</strong></p>
-        <p>RavenEye runs in your browser and only sends screenshots to the OCR relay endpoint you configure for text extraction.</p>
+        <p>The API release sends screenshots only to the OCR relay endpoint you configure. Offline releases process captures locally with bundled Tesseract.js and do not send screenshots to any endpoint.</p>
         
         <h2>2. Data Stored Locally on Your Device</h2>
-        <p>The extension stores the following data <strong>only on your device</strong> using Chrome's secure storage API (chrome.storage.sync):</p>
+        <p>The extension stores the following data <strong>only in your browser's extension storage</strong> using the browser storage API:</p>
         <ul>
             <li><strong>User Preferences:</strong> Visual settings including:
                 <ul>
@@ -84,7 +84,7 @@
                 </ul>
             </li>
         </ul>
-        <p>This data is synchronized across your devices if you use Chrome/Edge Sync, but <strong>it remains private to you</strong> and is not accessible to us.</p>
+        <p>Some browsers may synchronize extension settings across your devices. RavenEye does not operate or control that browser-provided synchronization, and the settings are not accessible to us.</p>
         
         <h2>3. Third-Party Services</h2>
         <p>When you activate OCR and capture a screenshot, RavenEye sends the image to your configured OCR relay endpoint:</p>
@@ -97,6 +97,7 @@
             <li><strong>Data Retention:</strong> Controlled by your relay and OCR provider policy</li>
             <li><strong>Endpoint:</strong> Configurable in RavenEye settings (example: <code>https://your-domain.com/api/ocr</code>)</li>
         </ul>
+        <p><strong>Offline release:</strong> Offline bundles include the OCR engine and English model locally. Captures remain in the browser and no OCR relay endpoint is required.</p>
         
         <h2>4. Permissions Explained</h2>
         <p>RavenEye requests the following browser permissions. Here's why each is necessary:</p>
@@ -104,10 +105,10 @@
             <li><strong>activeTab:</strong> Required to capture screenshots of the current tab when you activate the extension</li>
             <li><strong>tabs:</strong> Required to query which tab is active</li>
             <li><strong>scripting:</strong> Required to inject the visual capture interface into web pages after you trigger capture</li>
-            <li><strong>storage:</strong> Required to save your settings locally in encrypted browser storage</li>
+            <li><strong>storage:</strong> Required to save your settings in browser-provided extension storage</li>
             <li><strong>clipboardWrite:</strong> Required to copy extracted text to your clipboard (when auto-copy is enabled)</li>
             <li><strong>downloads:</strong> Required to save captured images to your Downloads folder (when auto-save is enabled)</li>
-            <li><strong>&lt;all_urls&gt; (host permission):</strong> Required for capture overlay and OCR execution on user-opened webpages</li>
+            <li><strong>Host access:</strong> Required for the capture overlay and OCR execution on webpages where you activate RavenEye</li>
         </ul>
         
         <h2>5. Analytics & Tracking</h2>
@@ -185,8 +186,8 @@
         <p><strong>In plain English:</strong></p>
         <ol>
             <li>We don't collect your personal data - everything stays on your device</li>
-            <li>Set your OCR relay URL in RavenEye settings before first OCR use</li>
-            <li>Screenshots are sent only to your configured OCR relay endpoint for processing</li>
+            <li>API builds use the OCR relay URL you configure; offline builds need no endpoint</li>
+            <li>API builds send screenshots only to your configured OCR relay; offline builds keep them local</li>
             <li>We don't track you, use analytics, or serve ads</li>
             <li>You can delete all data by uninstalling the extension</li>
             <li>The code is open source - you can verify everything</li>

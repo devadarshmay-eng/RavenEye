@@ -55,6 +55,8 @@ jobs:
           name: RavenEye ${{ steps.get_version.outputs.VERSION }}
           body: |
             ## 🦅 RavenEye ${{ steps.get_version.outputs.VERSION }}
+
+            This API-backed release requires an OCR relay endpoint configured in the extension settings.
             
             ### Installation
             1. Download `raveneye-${{ steps.get_version.outputs.VERSION }}.zip`

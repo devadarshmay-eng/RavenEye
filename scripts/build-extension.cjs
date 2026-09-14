@@ -44,7 +44,11 @@ if (manifest.version !== pkg.version) {
 fs.rmSync(outputDir, { recursive: true, force: true });
 copyDir(publicDir, outputDir);
 
-for (const fileName of ['popup-backup.html', 'popup-backup.js', 'setup.html']) {
+const popupPath = path.join(outputDir, 'popup.html');
+const popup = fs.readFileSync(popupPath, 'utf8').replace('__RAVENEYE_VERSION__', pkg.version);
+fs.writeFileSync(popupPath, popup);
+
+for (const fileName of ['popup-backup.html', 'popup-backup.js', 'setup.html', 'offline-background.js']) {
   removeIfExists(path.join(outputDir, fileName));
 }
 

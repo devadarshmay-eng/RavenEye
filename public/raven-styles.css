@@ -55,7 +55,7 @@
   position: fixed;
   inset: 0;
   z-index: 2147483647;
-  cursor: crosshair;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M16 2v28M2 16h28' stroke='%23000' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M16 2v28M2 16h28' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23fff' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E") 16 16, crosshair;
   user-select: none;
 }
 
@@ -104,9 +104,9 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 290px;
+  width: 380px;
   max-width: calc(100vw - 24px);
-  background: rgb(var(--raven-card));
+  background: #000;
   color: rgb(var(--raven-fg));
   border: 1px solid rgb(var(--raven-border));
   border-radius: 12px;
@@ -152,7 +152,7 @@
 
 .raven-preview {
   width: 100%;
-  height: 84px;
+  height: 128px;
   background: rgb(var(--raven-muted));
   border-bottom: 1px solid rgb(var(--raven-border));
 }
@@ -173,8 +173,8 @@
 
 .raven-text-area {
   width: 100%;
-  min-height: 56px;
-  max-height: 110px;
+  min-height: 112px;
+  max-height: 180px;
   background-color: #18181b !important;
   /* Force Dark Background */
   color: #fafafa !important;
@@ -182,7 +182,7 @@
   border: 1px solid rgb(var(--raven-border));
   border-radius: 4px;
   padding: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-family: monospace;
   resize: none;
   overflow: auto;

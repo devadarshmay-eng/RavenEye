@@ -24,7 +24,11 @@
         return;
       }
 
-      chrome.runtime.sendMessage({ action: "ACTIVATE_FROM_SHORTCUT" });
+      chrome.runtime.sendMessage({ action: "ACTIVATE_FROM_SHORTCUT" }, () => {
+        if (chrome.runtime.lastError) {
+          document.dispatchEvent(new CustomEvent("raveneye-activate-capture"));
+        }
+      });
       event.preventDefault();
     },
     true

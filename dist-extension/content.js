@@ -5,6 +5,7 @@
   let isDragging = false;
   let startX, startY;
   let settings = {};
+  let chromiumOcrWorkerPromise;
 
   // Clean initialization
   function init() {
@@ -12,6 +13,42 @@
       const el = document.getElementById(id);
       if (el) el.remove();
     });
+  }
+
+  async function runOcr(dataUrl) {
+    if (typeof Tesseract !== 'undefined' && typeof Tesseract.createWorker === 'function') {
+      if (!chromiumOcrWorkerPromise) {
+        chromiumOcrWorkerPromise = Tesseract.createWorker('eng', 1, {
+          workerPath: chrome.runtime.getURL('tesseract-worker.min.js'),
+          corePath: chrome.runtime.getURL('tesseract-core.wasm.js'),
+          langPath: chrome.runtime.getURL('tessdata'),
+          workerBlobURL: false
+        }).then(async (worker) => {
+          await worker.setParameters({
+            tessedit_pageseg_mode: '6',
+            preserve_interword_spaces: '1'
+          });
+          return worker;
+        }).catch((error) => {
+          chromiumOcrWorkerPromise = null;
+          throw error;
+        });
+      }
+
+      try {
+        const worker = await chromiumOcrWorkerPromise;
+        const result = await worker.recognize(dataUrl);
+        return { success: true, text: result.data.text.trim() };
+      } catch (error) {
+        chromiumOcrWorkerPromise = null;
+        return {
+          success: false,
+          error: `Chromium offline OCR failed: ${error?.message || String(error)}`
+        };
+      }
+    }
+
+    return sendMessagePromise({ action: 'RUN_OCR', dataUrl });
   }
 
   // Settings Loader
@@ -38,6 +75,8 @@
       sendResponse({ success: true });
     }
   });
+
+  document.addEventListener("raveneye-activate-capture", activateCapture);
 
   async function activateCapture() {
     if (isActive) return;
@@ -174,7 +213,10 @@
 
           // OCR
           try {
-            const ocrRes = await sendMessagePromise({ action: 'RUN_OCR', dataUrl: croppedUrl });
+            const ocrImage = await prepareOcrImage(croppedUrl);
+            const ocrRes = typeof runOcr === 'function'
+              ? await runOcr(ocrImage)
+              : await sendMessagePromise({ action: 'RUN_OCR', dataUrl: ocrImage });
             const textArea = document.getElementById('raven-text-area');
 
             if (ocrRes.success && ocrRes.text) {
@@ -183,6 +225,7 @@
                 navigator.clipboard.writeText(ocrRes.text);
                 showToast('Text copied!', 'success');
               }
+
             } else if (ocrRes.success) {
               if (textArea) textArea.value = "No text found.";
             } else {
@@ -210,6 +253,31 @@
       width: Math.abs(ex - startX),
       height: Math.abs(ey - startY)
     };
+  }
+
+  function prepareOcrImage(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(3, Math.max(2, 1600 / Math.max(img.width, img.height)));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.filter = 'grayscale(1) contrast(1.18)';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Could not prepare capture for OCR.'));
+      img.src = dataUrl;
+    });
   }
 
   function deactivate() {
