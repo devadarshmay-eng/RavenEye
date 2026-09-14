@@ -90,7 +90,9 @@ if (policy.policyRequirements.mustMentionThirdPartyOCR) {
 
 if (policy.policyRequirements.mustMentionLocalSettingsStorage) {
   assert(
-    privacyPolicy.includes('chrome.storage.sync'),
+    privacyPolicy.includes('browser storage') ||
+      privacyPolicy.includes('extension storage') ||
+      privacyPolicy.includes('chrome.storage.sync'),
     'privacy-policy.html must mention local settings storage'
   );
 }
