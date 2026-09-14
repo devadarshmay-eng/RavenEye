@@ -21,6 +21,23 @@ function copyFile(source, destination) {
   fs.copyFileSync(source, destination);
 }
 
+function copyFirefoxTesseractBundle(source, destination) {
+  let bundle = fs.readFileSync(source, 'utf8');
+  bundle = bundle.replace(
+    /Function\("r","regeneratorRuntime = r"\)\(([^)]+)\)/g,
+    'globalThis.regeneratorRuntime=$1'
+  );
+  bundle = bundle.replace(
+    /new Function\("return this"\)\(\)/g,
+    'globalThis'
+  );
+
+  if (bundle.includes('new Function(') || bundle.includes('Function("r","regeneratorRuntime')) {
+    throw new Error(`Firefox Tesseract bundle still contains dynamic code: ${source}`);
+  }
+  fs.writeFileSync(destination, bundle);
+}
+
 const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 const version = pkg.version;
 if (!fs.existsSync(publicDir)) throw new Error('public directory is missing.');
@@ -93,14 +110,25 @@ for (const browser of ['chromium', 'firefox']) {
   popup = popup.replace('__RAVENEYE_VERSION__', version);
   fs.writeFileSync(popupPath, popup);
 
-  copyFile(
-    path.join(root, 'node_modules', 'tesseract.js', 'dist', 'tesseract.min.js'),
-    path.join(outputDir, 'tesseract.min.js')
-  );
-  copyFile(
-    path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
-    path.join(outputDir, 'tesseract-worker.min.js')
-  );
+  if (browser === 'firefox') {
+    copyFirefoxTesseractBundle(
+      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'tesseract.min.js'),
+      path.join(outputDir, 'tesseract.min.js')
+    );
+    copyFirefoxTesseractBundle(
+      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
+      path.join(outputDir, 'tesseract-worker.min.js')
+    );
+  } else {
+    copyFile(
+      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'tesseract.min.js'),
+      path.join(outputDir, 'tesseract.min.js')
+    );
+    copyFile(
+      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
+      path.join(outputDir, 'tesseract-worker.min.js')
+    );
+  }
   copyFile(
     path.join(root, 'node_modules', 'tesseract.js-core', 'tesseract-core.wasm.js'),
     path.join(outputDir, 'tesseract-core.wasm.js')
