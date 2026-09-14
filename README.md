@@ -1,20 +1,29 @@
 # RavenEye
 
-RavenEye is a browser extension for Chrome-based browsers that captures any on-screen region and extracts text using OCR.
+RavenEye is a browser extension that captures any on-screen region and extracts text using OCR across supported browsers.
 
-[![Version](https://img.shields.io/badge/version-1.0.2-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
+[![Version](https://img.shields.io/badge/version-1.0.3-a855f7?style=flat-square&logo=github)](https://github.com/devadarshmay-eng/RavenEye/releases)
 [![License](https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye/blob/main/LICENSE)
-[![Manifest](https://img.shields.io/badge/manifest-V3-10b981?style=flat-square&logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/)
-[![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Brave%20%7C%20Edge-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
+[![Manifest](https://img.shields.io/badge/manifest-browser%20extension-10b981?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
+[![Platform](https://img.shields.io/badge/platform-Chromium%20%7C%20Firefox-orange?style=flat-square)](https://github.com/devadarshmay-eng/RavenEye)
 
 **Documentation:** https://devadarshmay-eng.github.io/RavenEye/  
 **Privacy Policy:** https://devadarshmay-eng.github.io/RavenEye/privacy-policy.html
+
+### Get RavenEye
+
+[![Install RavenEye from Microsoft Edge Add-ons](https://img.shields.io/badge/Microsoft%20Edge-Get%20RavenEye-0b5cad?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/raveneye/koocdabapmgclncoapkboamlpblhnaaj?hl=en-US)
+[![Install RavenEye from Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--on%20page-ff7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/firefox/)
+
+The Firefox Add-ons link is a temporary landing link and can be replaced with the published RavenEye listing URL.
 
 ## Project Overview
 
 RavenEye is designed for fast text capture from web pages, PDFs, videos, and visual content where direct copy is not available. It provides a lightweight capture flow and immediately returns extracted text for copying and reuse.
 
 ## OCR Relay Setup (required)
+
+The **v1.0.3 API release** requires an OCR relay endpoint. It sends the selected image to the URL you configure; no provider secret is shipped in the extension.
 
 RavenEye now uses a configurable OCR relay endpoint so provider secrets stay on the server side.
 
@@ -37,6 +46,19 @@ RavenEye now uses a configurable OCR relay endpoint so provider secrets stay on 
 - Theme-aware popup settings interface
 - Documentation and privacy pages published via GitHub Pages
 
+## Offline browser releases
+
+The offline release includes separate bundles for Chromium-based browsers and Firefox. Both bundles run English OCR locally with Tesseract.js and a bundled WASM engine/model, so they require no API endpoint or internet connection after installation. The capture is upscaled and contrast-adjusted before OCR to improve recognition of small text.
+
+Build both offline bundles and their checksums with:
+
+```bash
+npm run build:offline
+npm run release:package:offline
+```
+
+Use the Chromium bundle for Chrome, Edge, Brave, and other Chromium browsers, and the Firefox bundle for Firefox.
+
 ## Installation
 
 ### Local development (unpacked extension)
@@ -47,7 +69,7 @@ cd RavenEye
 npm install
 ```
 
-1. Open `chrome://extensions/` (or `edge://extensions/` / `brave://extensions/`).
+1. Open your browser's extension management page (for example, `chrome://extensions/`, `edge://extensions/`, `brave://extensions/`, or `about:addons`).
 2. Enable **Developer mode**.
 3. Select **Load unpacked**.
 4. Choose the `public/` folder.
@@ -83,7 +105,7 @@ npm run edge:onboarding
 ### Automated release pipeline
 
 - Automatic path:
-  - Push a version tag like `v1.0.2` to `main`.
+  - Push the API release tag `v1.0.3` to `main`.
   - Pipeline auto-builds, creates GitHub release, uploads package, and submits publish request to Edge.
 - Manual path:
   - Trigger **Edge Release Pipeline** via `workflow_dispatch`.
@@ -139,17 +161,17 @@ The screenshot set is ordered for release listings and product walkthrough:
 
 | Layer | Technology |
 |---|---|
-| Extension Platform | Chrome Extensions Manifest V3 |
-| OCR Endpoint | Configurable OCR relay (server-side secret model) |
+| Extension Platform | Chromium-based browsers and Firefox |
+| OCR Endpoint | Configurable OCR relay or bundled local Tesseract.js |
 | UI Runtime | React 18 + TypeScript + Vite |
-| Storage | `chrome.storage.sync` |
+| Storage | Browser-provided extension storage |
 | Styling | Tailwind CSS + Radix UI |
 
 ## Roadmap
 
 - Multi-language OCR improvements
 - Capture history and retrieval
-- Firefox compatibility path
+- Offline browser bundles
 - OCR post-processing quality enhancements
 
 ## Contributing
