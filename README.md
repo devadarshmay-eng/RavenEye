@@ -13,9 +13,9 @@ RavenEye is a browser extension that captures any on-screen region and extracts 
 ### Get RavenEye
 
 [![Install RavenEye from Microsoft Edge Add-ons](https://img.shields.io/badge/Microsoft%20Edge-Get%20RavenEye-0b5cad?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/raveneye/koocdabapmgclncoapkboamlpblhnaaj?hl=en-US)
-[![Install RavenEye from Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--on%20page-ff7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/firefox/)
+[![Install RavenEye from Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--on%20page-ff7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/raveneye/)
 
-The Firefox Add-ons link is a temporary landing link and can be replaced with the published RavenEye listing URL.
+Install RavenEye directly from the Firefox Add-ons listing.
 
 ## Project Overview
 
@@ -184,3 +184,4 @@ The screenshot set is ordered for release listings and product walkthrough:
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
