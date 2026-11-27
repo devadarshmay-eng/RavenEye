@@ -56,6 +56,8 @@ const requiredFiles = [
   'manifest.json',
   'background.js',
   'content.js',
+  'capture.html',
+  'capture.js',
   'popup.html',
   'popup.js',
   'raven-styles.css',

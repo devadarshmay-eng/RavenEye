@@ -16,38 +16,6 @@
   }
 
   async function runOcr(dataUrl) {
-    if (typeof Tesseract !== 'undefined' && typeof Tesseract.createWorker === 'function') {
-      if (!chromiumOcrWorkerPromise) {
-        chromiumOcrWorkerPromise = Tesseract.createWorker('eng', 1, {
-          workerPath: chrome.runtime.getURL('tesseract-worker.min.js'),
-          corePath: chrome.runtime.getURL('tesseract-core.wasm.js'),
-          langPath: chrome.runtime.getURL('tessdata'),
-          workerBlobURL: false
-        }).then(async (worker) => {
-          await worker.setParameters({
-            tessedit_pageseg_mode: '6',
-            preserve_interword_spaces: '1'
-          });
-          return worker;
-        }).catch((error) => {
-          chromiumOcrWorkerPromise = null;
-          throw error;
-        });
-      }
-
-      try {
-        const worker = await chromiumOcrWorkerPromise;
-        const result = await worker.recognize(dataUrl);
-        return { success: true, text: result.data.text.trim() };
-      } catch (error) {
-        chromiumOcrWorkerPromise = null;
-        return {
-          success: false,
-          error: `Chromium offline OCR failed: ${error?.message || String(error)}`
-        };
-      }
-    }
-
     return sendMessagePromise({ action: 'RUN_OCR', dataUrl });
   }
 
@@ -80,10 +48,10 @@
 
   async function activateCapture() {
     if (isActive) return;
+    isActive = true;
     init();
     await loadSettings();
-
-    isActive = true;
+    if (!isActive) return;
 
     // Create Overlay
     overlay = document.createElement('div');
@@ -222,8 +190,7 @@
             if (ocrRes.success && ocrRes.text) {
               if (textArea) textArea.value = ocrRes.text;
               if (settings.autoCopy) {
-                navigator.clipboard.writeText(ocrRes.text);
-                showToast('Text copied!', 'success');
+                copyTextToClipboard(ocrRes.text);
               }
 
             } else if (ocrRes.success) {
@@ -420,23 +387,54 @@
 
     resultPopup.querySelector('#btn-copy-text').onclick = () => {
       const text = document.getElementById('raven-text-area').value;
-      navigator.clipboard.writeText(text);
-      showToast('Text copied', 'success');
-      // Keep open if copied (user interaction) - restart timer
+      copyTextToClipboard(text);
       startHideTimer();
     };
 
     resultPopup.querySelector('#btn-copy-img').onclick = async () => {
-      const res = await fetch(imgUrl);
-      const blob = await res.blob();
       try {
-        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        const res = await fetch(imgUrl);
+        const blob = await res.blob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         showToast('Image copied', 'success');
         startHideTimer();
       } catch (e) {
         showToast('Failed to copy image', 'error');
       }
     };
+  }
+
+  async function copyTextToClipboard(text) {
+    if (!text || text === 'Processing text...' || text.startsWith('OCR failed:')) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        showToast('Text copied!', 'success');
+        return;
+      }
+    } catch {
+      // Document focus lost during async OCR; fallback to hidden textarea
+    }
+
+    try {
+      const helper = document.createElement('textarea');
+      helper.value = text;
+      helper.setAttribute('readonly', '');
+      helper.style.position = 'fixed';
+      helper.style.left = '-9999px';
+      helper.style.top = '-9999px';
+      helper.style.opacity = '0';
+      document.body.appendChild(helper);
+      helper.select();
+      const success = document.execCommand('copy');
+      helper.remove();
+      if (success) {
+        showToast('Text copied!', 'success');
+        return;
+      }
+    } catch {}
+
+    showToast('Capture ready - click Copy Text', 'info');
   }
 
   function showToast(msg, type) {

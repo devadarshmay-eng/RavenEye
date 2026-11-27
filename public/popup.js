@@ -72,6 +72,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  function injectScripts(tabId) {
+    if (chrome.scripting?.executeScript) {
+      return Promise.all([
+        chrome.scripting.executeScript({
+          target: { tabId },
+          files: ["content.js"]
+        }),
+        chrome.scripting.insertCSS({
+          target: { tabId },
+          files: ["raven-styles.css"]
+        })
+      ]);
+    }
+
+    if (chrome.tabs?.executeScript) {
+      return new Promise((resolve, reject) => {
+        chrome.tabs.executeScript(tabId, { file: "content.js" }, () => {
+          if (chrome.runtime.lastError) {
+            return reject(new Error(chrome.runtime.lastError.message));
+          }
+          chrome.tabs.insertCSS(tabId, { file: "raven-styles.css" }, () => {
+            if (chrome.runtime.lastError) {
+              return reject(new Error(chrome.runtime.lastError.message));
+            }
+            resolve();
+          });
+        });
+      });
+    }
+
+    return Promise.reject(new Error("Script injection API unavailable."));
+  }
+
   function activateCaptureFromPopup(backgroundError) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
@@ -80,23 +113,27 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      Promise.all([
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ["content.js"]
-        }),
-        chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: ["raven-styles.css"] })
-      ]).then(() => {
+      injectScripts(tab.id).then(() => {
         chrome.tabs.sendMessage(tab.id, { action: "ACTIVATE_CAPTURE" }, () => {
           if (chrome.runtime.lastError) {
-            showToast(`❌ ${chrome.runtime.lastError.message}`);
+            triggerFallbackCapture(tab.id, backgroundError);
             return;
           }
           window.close();
         });
-      }).catch((error) => {
-        showToast(`❌ ${error.message || backgroundError || "Capture could not start."}`);
+      }).catch(() => {
+        triggerFallbackCapture(tab.id, backgroundError);
       });
+    });
+  }
+
+  function triggerFallbackCapture(tabId, backgroundError) {
+    chrome.runtime.sendMessage({ action: "FALLBACK_CAPTURE", tabId }, (response) => {
+      if (response && response.success) {
+        window.close();
+      } else {
+        showToast(`❌ ${response?.error || backgroundError || "Capture could not start."}`);
+      }
     });
   }
 

@@ -21,7 +21,7 @@ function copyFile(source, destination) {
   fs.copyFileSync(source, destination);
 }
 
-function copyFirefoxTesseractBundle(source, destination) {
+function copySanitizedTesseractBundle(source, destination) {
   let bundle = fs.readFileSync(source, 'utf8');
   bundle = bundle.replace(
     /Function\("r","regeneratorRuntime = r"\)\(([^)]+)\)/g,
@@ -33,7 +33,7 @@ function copyFirefoxTesseractBundle(source, destination) {
   );
 
   if (bundle.includes('new Function(') || bundle.includes('Function("r","regeneratorRuntime')) {
-    throw new Error(`Firefox Tesseract bundle still contains dynamic code: ${source}`);
+    throw new Error(`Tesseract bundle still contains dynamic code: ${source}`);
   }
   fs.writeFileSync(destination, bundle);
 }
@@ -52,26 +52,35 @@ for (const browser of ['chromium', 'firefox']) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   manifest.version = version;
   manifest.description = 'Capture screen regions and extract text locally with private, offline OCR.';
-  manifest.background = browser === 'firefox'
-    ? { scripts: ['tesseract.min.js', 'firefox-background.js'] }
-    : { service_worker: 'offline-background.js' };
+
   if (browser === 'chromium') {
+    manifest.manifest_version = 3;
+    manifest.background = { service_worker: 'offline-background.js' };
     manifest.permissions = [...new Set([...(manifest.permissions || []), 'offscreen'])];
+    manifest.content_security_policy = {
+      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    };
     manifest.content_scripts = (manifest.content_scripts || []).map((contentScript) => ({
       ...contentScript,
-      js: ['shortcut-listener.js', ...(contentScript.js || [])
-        .filter((file) => !['content.js', 'chromium-content.js', 'tesseract.min.js', 'shortcut-listener.js'].includes(file))]
+      js: ['shortcut-listener.js']
     }));
-  }
-  manifest.web_accessible_resources = browser === 'firefox'
-    ? ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*']
-    : [{
-        resources: ['tesseract-worker.min.js', 'tesseract-core.wasm.js', 'tesseract-core.wasm', 'tessdata/*'],
-        matches: ['<all_urls>']
-      }];
-
-  if (browser === 'firefox') {
+    manifest.web_accessible_resources = [{
+      resources: [
+        'tesseract.min.js',
+        'tesseract-worker.min.js',
+        'tesseract-core.wasm.js',
+        'tesseract-core.wasm',
+        'tessdata/*',
+        'chromium-ocr.html',
+        'chromium-ocr.js',
+        'capture.html',
+        'capture.js'
+      ],
+      matches: ['<all_urls>']
+    }];
+  } else {
     manifest.manifest_version = 2;
+    manifest.background = { scripts: ['tesseract.min.js', 'firefox-background.js'] };
     manifest.permissions = [...new Set([
       ...(manifest.permissions || []).filter((permission) => permission !== 'scripting'),
       '<all_urls>'
@@ -89,16 +98,28 @@ for (const browser of ['chromium', 'firefox']) {
         }
       }
     };
+    manifest.web_accessible_resources = [
+      'tesseract-worker.min.js',
+      'tesseract-core.wasm.js',
+      'tesseract-core.wasm',
+      'tessdata/*',
+      'capture.html',
+      'capture.js',
+      'raven-styles.css'
+    ];
   }
 
   fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   fs.rmSync(path.join(outputDir, 'background.js'), { force: true });
   fs.rmSync(path.join(outputDir, 'chromium-background.js'), { force: true });
-  fs.rmSync(path.join(outputDir, 'offline-background.js'), { force: true });
+
   if (browser === 'chromium') {
+    // Preserve offline-background.js for Chromium service worker
+    fs.rmSync(path.join(outputDir, 'firefox-background.js'), { force: true });
     copyFile(path.join(publicDir, 'chromium-ocr.html'), path.join(outputDir, 'chromium-ocr.html'));
     copyFile(path.join(publicDir, 'chromium-ocr.js'), path.join(outputDir, 'chromium-ocr.js'));
   } else {
+    fs.rmSync(path.join(outputDir, 'offline-background.js'), { force: true });
     copyFile(path.join(publicDir, 'firefox-background.js'), path.join(outputDir, 'firefox-background.js'));
     fs.rmSync(path.join(outputDir, 'chromium-ocr.html'), { force: true });
     fs.rmSync(path.join(outputDir, 'chromium-ocr.js'), { force: true });
@@ -110,25 +131,16 @@ for (const browser of ['chromium', 'firefox']) {
   popup = popup.replace('__RAVENEYE_VERSION__', version);
   fs.writeFileSync(popupPath, popup);
 
-  if (browser === 'firefox') {
-    copyFirefoxTesseractBundle(
-      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'tesseract.min.js'),
-      path.join(outputDir, 'tesseract.min.js')
-    );
-    copyFirefoxTesseractBundle(
-      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
-      path.join(outputDir, 'tesseract-worker.min.js')
-    );
-  } else {
-    copyFile(
-      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'tesseract.min.js'),
-      path.join(outputDir, 'tesseract.min.js')
-    );
-    copyFile(
-      path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
-      path.join(outputDir, 'tesseract-worker.min.js')
-    );
-  }
+  // Sanitize Tesseract bundles for both browsers to eliminate dynamic code evaluation
+  copySanitizedTesseractBundle(
+    path.join(root, 'node_modules', 'tesseract.js', 'dist', 'tesseract.min.js'),
+    path.join(outputDir, 'tesseract.min.js')
+  );
+  copySanitizedTesseractBundle(
+    path.join(root, 'node_modules', 'tesseract.js', 'dist', 'worker.min.js'),
+    path.join(outputDir, 'tesseract-worker.min.js')
+  );
+
   copyFile(
     path.join(root, 'node_modules', 'tesseract.js-core', 'tesseract-core.wasm.js'),
     path.join(outputDir, 'tesseract-core.wasm.js')
@@ -145,6 +157,57 @@ for (const browser of ['chromium', 'firefox']) {
   for (const fileName of ['popup-backup.html', 'popup-backup.js', 'setup.html']) {
     fs.rmSync(path.join(outputDir, fileName), { force: true });
   }
+
+  // Integrity assertions
+  const requiredFiles = browser === 'chromium'
+    ? [
+        'manifest.json',
+        'offline-background.js',
+        'chromium-ocr.html',
+        'chromium-ocr.js',
+        'capture.html',
+        'capture.js',
+        'content.js',
+        'shortcut-listener.js',
+        'popup.html',
+        'popup.js',
+        'raven-styles.css',
+        'tesseract.min.js',
+        'tesseract-worker.min.js',
+        'tesseract-core.wasm.js',
+        'tesseract-core.wasm',
+        path.join('tessdata', 'eng.traineddata.gz'),
+        path.join('icons', 'icon16.png'),
+        path.join('icons', 'icon32.png'),
+        path.join('icons', 'icon48.png'),
+        path.join('icons', 'icon128.png')
+      ]
+    : [
+        'manifest.json',
+        'firefox-background.js',
+        'capture.html',
+        'capture.js',
+        'content.js',
+        'shortcut-listener.js',
+        'popup.html',
+        'popup.js',
+        'raven-styles.css',
+        'tesseract.min.js',
+        'tesseract-worker.min.js',
+        'tesseract-core.wasm.js',
+        'tesseract-core.wasm',
+        path.join('tessdata', 'eng.traineddata.gz'),
+        path.join('icons', 'icon16.png'),
+        path.join('icons', 'icon32.png'),
+        path.join('icons', 'icon48.png'),
+        path.join('icons', 'icon128.png')
+      ];
+
+  for (const rel of requiredFiles) {
+    if (!fs.existsSync(path.join(outputDir, rel))) {
+      throw new Error(`[build-offline] Missing required file for ${browser}: ${rel}`);
+    }
+  }
 }
 
-console.log(`[build-offline] Chromium and Firefox bundles prepared at ${outputRoot}`);
+console.log(`[build-offline] Chromium and Firefox bundles successfully prepared at ${outputRoot}`);

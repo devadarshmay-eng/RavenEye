@@ -1,6 +1,7 @@
 // RavenEye Firefox background page.
 
 let ocrWorkerPromise;
+let latestPendingCapture = null;
 
 function getErrorMessage(error, fallback) {
   if (typeof error === "string" && error.trim()) return error;
@@ -49,26 +50,101 @@ function sendTabMessage(tabId, payload) {
   });
 }
 
+function isPdfOrRestrictedTab(tab) {
+  if (!tab) return false;
+  const url = (tab.url || "").toLowerCase();
+  const title = (tab.title || "").toLowerCase();
+  if (url.endsWith(".pdf") || url.includes(".pdf?") || url.includes(".pdf#")) return true;
+  if (title.endsWith(".pdf")) return true;
+  if (url.startsWith("file://") && url.endsWith(".pdf")) return true;
+  if (url.startsWith("resource://pdf.js") || url.startsWith("about:reader")) return true;
+  return false;
+}
+
+async function startFallbackCapture(tab) {
+  try {
+    const targetTab = tab || (await getActiveTab());
+    const dataUrl = await new Promise((resolve, reject) => {
+      chrome.tabs.captureVisibleTab(targetTab.windowId, { format: "png", quality: 100 }, (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (!result) {
+          reject(new Error("Could not capture tab screenshot."));
+          return;
+        }
+        resolve(result);
+      });
+    });
+
+    const captureId = `cap_${Date.now()}`;
+    latestPendingCapture = {
+      dataUrl,
+      sourceUrl: targetTab.url || "",
+      sourceTitle: targetTab.title || "",
+      timestamp: Date.now()
+    };
+
+    if (chrome.storage?.local) {
+      chrome.storage.local.set({
+        [captureId]: latestPendingCapture,
+        latestCaptureId: captureId
+      });
+    }
+
+    const captureUrl = chrome.runtime.getURL(`capture.html?id=${captureId}`);
+    await new Promise((resolve, reject) => {
+      chrome.tabs.create({ url: captureUrl, active: true }, (createdTab) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(createdTab);
+      });
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("[RavenEye] Fallback capture failed:", error);
+    return {
+      success: false,
+      error: getErrorMessage(error, "Failed to capture document view.")
+    };
+  }
+}
+
 async function activateCapture() {
   try {
     const tab = await getActiveTab();
     const url = tab.url || "";
-    if (/^(chrome|edge|about|devtools|moz-extension):\/\//.test(url)) {
+    if (/^(chrome|edge|about|devtools|moz-extension):\/\//i.test(url) && !url.startsWith("about:reader")) {
       return {
         success: false,
         error: "RavenEye cannot run on browser internal pages."
       };
     }
 
+    // Direct fallback for PDF documents and special readers
+    if (isPdfOrRestrictedTab(tab)) {
+      return await startFallbackCapture(tab);
+    }
+
     try {
       await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
+      return { success: true };
     } catch {
-      await chrome.tabs.executeScript(tab.id, { file: "content.js" });
-      await chrome.tabs.insertCSS(tab.id, { file: "raven-styles.css" });
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
+      try {
+        await chrome.tabs.executeScript(tab.id, { file: "content.js" });
+        await chrome.tabs.insertCSS(tab.id, { file: "raven-styles.css" });
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
+        return { success: true };
+      } catch (injectionError) {
+        console.warn("[RavenEye] In-page script injection restricted; launching PDF/document capture:", injectionError);
+        return await startFallbackCapture(tab);
+      }
     }
-    return { success: true };
   } catch (error) {
     console.error("[RavenEye] Activation failed:", error);
     return {
@@ -146,6 +222,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     activateCapture().then(sendResponse);
     return true;
   }
+  if (message.action === "FALLBACK_CAPTURE") {
+    getActiveTab()
+      .then((tab) => startFallbackCapture(tab))
+      .then(sendResponse);
+    return true;
+  }
+  if (message.action === "GET_PENDING_CAPTURE") {
+    sendResponse({ success: true, dataUrl: latestPendingCapture?.dataUrl || null });
+    return false;
+  }
+  if (message.action === "CLOSE_TAB") {
+    if (sender.tab && typeof sender.tab.id === "number") {
+      chrome.tabs.remove(sender.tab.id);
+    }
+    return false;
+  }
   if (message.action === "CAPTURE_REGION") {
     chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: "png", quality: 100 }, (dataUrl) => {
       if (chrome.runtime.lastError) {
@@ -167,5 +259,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       saveAs: false
     });
     sendResponse({ success: true });
+    return false;
   }
 });

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RavenEye - PDF & Screen Capture</title>
+  <link rel="stylesheet" href="raven-styles.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #09090b;
+      color: #fafafa;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+    #capture-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+    #capture-image-wrapper {
+      position: relative;
+      display: inline-block;
+      max-width: 100vw;
+      max-height: 100vh;
+      line-height: 0;
+    }
+    #capture-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    #top-helper-bar {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2147483646;
+      background: rgba(18, 18, 20, 0.92);
+      border: 1px solid rgba(63, 63, 70, 0.7);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      letter-spacing: 0.1px;
+      pointer-events: auto;
+      animation: ravenFadeIn 0.25s ease-out;
+    }
+    .top-helper-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+    .top-helper-icon {
+      width: 16px;
+      height: 16px;
+    }
+    .top-helper-text {
+      color: #d4d4d8;
+    }
+    .top-helper-kbd {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      color: #a1a1aa;
+    }
+    .top-helper-btn {
+      background: transparent;
+      border: 1px solid #3f3f46;
+      color: #f4f4f5;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s ease;
+    }
+    .top-helper-btn:hover {
+      background: #27272a;
+      border-color: #71717a;
+    }
+    #drop-prompt {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      text-align: center;
+      padding: 24px;
+      background: #09090b;
+      z-index: 10;
+    }
+    #drop-prompt h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f4f4f5;
+    }
+    #drop-prompt p {
+      font-size: 14px;
+      color: #a1a1aa;
+      max-width: 440px;
+      line-height: 1.5;
+    }
+    @keyframes ravenFadeIn {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="top-helper-bar">
+    <span class="top-helper-badge">
+      <img src="icons/icon16.png" class="top-helper-icon" alt="RavenEye logo">
+      RavenEye PDF Capture
+    </span>
+    <span class="top-helper-text">Drag any area to OCR</span>
+    <span class="top-helper-kbd">ESC to return</span>
+    <button id="close-helper-btn" class="top-helper-btn" type="button">Done</button>
+  </div>
+
+  <div id="capture-stage">
+    <div id="capture-image-wrapper">
+      <img id="capture-image" alt="Captured document preview" />
+    </div>
+  </div>
+
+  <div id="drop-prompt">
+    <h2>RavenEye Document Capture</h2>
+    <p>Viewing a PDF or image in Firefox? Click the RavenEye icon or press <kbd class="top-helper-kbd">Alt+Shift+E</kbd> on any PDF tab to capture instantly.</p>
+    <button id="drop-prompt-close" class="top-helper-btn" type="button" style="padding: 6px 18px; font-size: 14px;">Return to browser</button>
+  </div>
+
+  <script src="capture.js"></script>
+</body>
+</html>

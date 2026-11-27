@@ -1,4 +1,4 @@
-// RavenEye offline background service.
+// RavenEye offline background service worker for Chromium-based browsers.
 
 const DEFAULT_OCR_SETTINGS = {
   dimIntensity: 50,
@@ -8,8 +8,8 @@ const DEFAULT_OCR_SETTINGS = {
   theme: "dark"
 };
 
-let ocrWorkerPromise;
-let offscreenCreationPromise;
+let offscreenCreationPromise = null;
+let latestPendingCapture = null;
 
 function getErrorMessage(error, fallback) {
   if (typeof error === "string" && error.trim()) return error;
@@ -44,7 +44,75 @@ function getActiveTab() {
 
 function isRestrictedUrl(url) {
   if (!url) return true;
-  return /^(chrome|edge|about|devtools|moz-extension):\/\//.test(url);
+  return (
+    /^(chrome|edge|about|devtools|brave|opera|vivaldi|moz-extension|view-source):\/\//i.test(url) ||
+    /^https?:\/\/(chrome\.google\.com\/webstore|chromewebstore\.google\.com|microsoftedge\.microsoft\.com\/addons)/i.test(url)
+  );
+}
+
+function isPdfOrRestrictedDocument(tab) {
+  if (!tab) return false;
+  const url = (tab.url || "").toLowerCase();
+  const title = (tab.title || "").toLowerCase();
+  if (url.endsWith(".pdf") || url.includes(".pdf?") || url.includes(".pdf#")) return true;
+  if (title.endsWith(".pdf")) return true;
+  if (url.startsWith("file://") && url.endsWith(".pdf")) return true;
+  if (url.startsWith("chrome-extension://") && url.includes("pdf")) return true;
+  return false;
+}
+
+async function startFallbackCapture(tab) {
+  try {
+    const targetTab = tab || (await getActiveTab());
+    const dataUrl = await new Promise((resolve, reject) => {
+      chrome.tabs.captureVisibleTab(targetTab.windowId, { format: "png", quality: 100 }, (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (!result) {
+          reject(new Error("Could not capture tab screenshot."));
+          return;
+        }
+        resolve(result);
+      });
+    });
+
+    const captureId = `cap_${Date.now()}`;
+    latestPendingCapture = {
+      dataUrl,
+      sourceUrl: targetTab.url || "",
+      sourceTitle: targetTab.title || "",
+      timestamp: Date.now()
+    };
+
+    if (chrome.storage?.local) {
+      chrome.storage.local.set({
+        [captureId]: latestPendingCapture,
+        latestCaptureId: captureId
+      });
+    }
+
+    const captureUrl = chrome.runtime.getURL(`capture.html?id=${captureId}`);
+    await new Promise((resolve, reject) => {
+      chrome.tabs.create({ url: captureUrl, active: true }, (createdTab) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(createdTab);
+      });
+    });
+
+    ensureChromiumOffscreenDocument().catch(() => {});
+    return { success: true };
+  } catch (error) {
+    console.error("[RavenEye] Fallback capture failed:", error);
+    return {
+      success: false,
+      error: getErrorMessage(error, "Failed to capture document view.")
+    };
+  }
 }
 
 function sendTabMessage(tabId, payload) {
@@ -60,102 +128,82 @@ function sendTabMessage(tabId, payload) {
 }
 
 async function injectCaptureAssets(tabId) {
-  const contentScripts = ["content.js"];
   if (chrome.scripting) {
     await Promise.all([
-      chrome.scripting.executeScript({ target: { tabId }, files: contentScripts }),
+      chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] }),
       chrome.scripting.insertCSS({ target: { tabId }, files: ["raven-styles.css"] })
     ]);
     return;
   }
 
-  await new Promise((resolve, reject) => {
-    chrome.tabs.executeScript(tabId, { file: contentScripts[contentScripts.length - 1] }, () => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      chrome.tabs.insertCSS(tabId, { file: "raven-styles.css" }, () => {
+  if (chrome.tabs?.executeScript) {
+    await new Promise((resolve, reject) => {
+      chrome.tabs.executeScript(tabId, { file: "content.js" }, () => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
         }
-        resolve();
+        chrome.tabs.insertCSS(tabId, { file: "raven-styles.css" }, () => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve();
+        });
       });
     });
-  });
+  }
 }
 
-async function activateCapture() {
-  try {
-    const tab = await getActiveTab();
-    if (isRestrictedUrl(tab.url || "")) {
-      return {
-        success: false,
-        error: "RavenEye cannot run on browser internal pages. Open a normal website and try again."
-      };
-    }
-
+async function hasOffscreenDocument(path) {
+  const offscreenUrl = chrome.runtime.getURL(path);
+  if (chrome.runtime?.getContexts) {
     try {
-      await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
-    } catch {
-      await injectCaptureAssets(tab.id);
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
-    }
-    return { success: true };
-  } catch (error) {
-    console.error("[RavenEye] Activation failed:", error);
-    return { success: false, error: error.message || "Failed to start capture." };
-  }
-}
-
-function getOcrWorker() {
-  if (!ocrWorkerPromise) {
-    if (typeof Tesseract === "undefined" || typeof Tesseract.createWorker !== "function") {
-      return Promise.reject(new Error("The bundled offline OCR engine was not loaded."));
-    }
-
-    ocrWorkerPromise = Tesseract.createWorker("eng", 1, {
-      workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
-      corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
-      langPath: chrome.runtime.getURL("tessdata"),
-      workerBlobURL: false
-    }).then(async (worker) => {
-      await worker.setParameters({
-        tessedit_pageseg_mode: "6",
-        preserve_interword_spaces: "1"
+      const contexts = await chrome.runtime.getContexts({
+        contextTypes: ["OFFSCREEN_DOCUMENT"],
+        documentUrls: [offscreenUrl]
       });
-      return worker;
-    }).catch((error) => {
-      ocrWorkerPromise = null;
-      throw new Error(`Offline OCR worker could not start: ${getErrorMessage(error, "worker initialization failed")}`);
-    });
+      return contexts && contexts.length > 0;
+    } catch {
+      // Fallback
+    }
   }
-  return ocrWorkerPromise;
+
+  if (chrome.offscreen?.hasDocument) {
+    try {
+      return await chrome.offscreen.hasDocument();
+    } catch {
+      // Fallback
+    }
+  }
+
+  return false;
 }
 
 async function ensureChromiumOffscreenDocument() {
-  if (!chrome.offscreen || !chrome.runtime.getContexts) {
-    throw new Error("This Chromium browser does not support the offline OCR document.");
+  if (!chrome.offscreen?.createDocument) {
+    throw new Error("This browser does not support the offline OCR offscreen document.");
   }
 
-  const offscreenUrl = chrome.runtime.getURL("chromium-ocr.html");
-  const contexts = await chrome.runtime.getContexts({
-    contextTypes: ["OFFSCREEN_DOCUMENT"],
-    documentUrls: [offscreenUrl]
-  });
-  if (contexts.length > 0) return;
+  const alreadyExists = await hasOffscreenDocument("chromium-ocr.html");
+  if (alreadyExists) return;
 
   if (!offscreenCreationPromise) {
     offscreenCreationPromise = chrome.offscreen.createDocument({
       url: "chromium-ocr.html",
-      reasons: ["WORKERS"],
-      justification: "Run local OCR in a document context that supports Web Workers."
+      reasons: ["BLOBS", "DOM_PARSER"],
+      justification: "Run local OCR in an isolated extension page with WebAssembly and Worker support."
+    }).catch((error) => {
+      const msg = error?.message || String(error);
+      if (msg.includes("already exists") || msg.includes("Only a single offscreen document")) {
+        return;
+      }
+      throw error;
     }).finally(() => {
       offscreenCreationPromise = null;
     });
   }
+
   await offscreenCreationPromise;
 }
 
@@ -168,41 +216,49 @@ function sendOffscreenOcr(message, attempt = 0) {
         return;
       }
 
-      if (attempt >= 20) {
-        reject(new Error(lastError?.message || "Chromium OCR document did not respond."));
+      if (attempt >= 30) {
+        reject(new Error(lastError?.message || "Chromium OCR document did not respond in time."));
         return;
       }
 
       setTimeout(() => {
         sendOffscreenOcr(message, attempt + 1).then(resolve, reject);
-      }, 250);
+      }, 150);
     });
   });
 }
 
 async function handleChromiumOCR(dataUrl, sendResponse) {
+  let settled = false;
+  // Keep-alive heartbeat during OCR processing to prevent SW idle sleep
+  const keepAliveInterval = setInterval(() => {
+    chrome.runtime.getPlatformInfo?.(() => {});
+  }, 4000);
+
+  const timeoutId = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    clearInterval(keepAliveInterval);
+    sendResponse({
+      success: false,
+      error: "Chromium OCR timed out. Try selecting a clearer, larger text region."
+    });
+  }, 45000);
+
+  const settle = (response) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timeoutId);
+    clearInterval(keepAliveInterval);
+    sendResponse(response || {
+      success: false,
+      error: "Chromium OCR document returned no response."
+    });
+  };
+
   try {
     await ensureChromiumOffscreenDocument();
-    let settled = false;
     const requestId = `ocr-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const settle = (response) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeoutId);
-      sendResponse(response || {
-        success: false,
-        error: "Chromium OCR document returned no response."
-      });
-    };
-    const timeoutId = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      sendResponse({
-        success: false,
-        error: "Chromium OCR timed out. Try selecting a larger or clearer text region."
-      });
-    }, 60000);
-
     sendOffscreenOcr({
       target: "raveneye-offscreen",
       action: "RUN_OFFSCREEN_OCR",
@@ -210,31 +266,50 @@ async function handleChromiumOCR(dataUrl, sendResponse) {
       dataUrl
     }).then(settle, (error) => settle({
       success: false,
-      error: error.message || "Chromium OCR document did not respond."
+      error: error?.message || "Chromium OCR document did not respond."
     }));
   } catch (error) {
-    sendResponse({
+    settle({
       success: false,
       error: getErrorMessage(error, "Could not start the Chromium offline OCR document.")
     });
   }
 }
 
-async function handleOCR(dataUrl, sendResponse) {
+async function activateCapture() {
   try {
-    if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
-      throw new Error("Invalid capture data.");
+    const tab = await getActiveTab();
+    const url = tab.url || "";
+    if (isRestrictedUrl(url) && !url.startsWith("about:reader")) {
+      return {
+        success: false,
+        error: "RavenEye cannot run on browser internal or extension store pages. Open a normal website and try again."
+      };
     }
-    const worker = await getOcrWorker();
-    const result = await worker.recognize(dataUrl);
-    const text = result.data.text.trim();
-    sendResponse({ success: true, text });
+
+    if (isPdfOrRestrictedDocument(tab)) {
+      return await startFallbackCapture(tab);
+    }
+
+    try {
+      await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
+      ensureChromiumOffscreenDocument().catch(() => {});
+      return { success: true };
+    } catch {
+      try {
+        await injectCaptureAssets(tab.id);
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        await sendTabMessage(tab.id, { action: "ACTIVATE_CAPTURE" });
+        ensureChromiumOffscreenDocument().catch(() => {});
+        return { success: true };
+      } catch (injectionError) {
+        console.warn("[RavenEye] In-page script injection restricted; launching PDF/document capture:", injectionError);
+        return await startFallbackCapture(tab);
+      }
+    }
   } catch (error) {
-    console.error("[RavenEye] Offline OCR error:", error);
-    sendResponse({
-      success: false,
-      error: getErrorMessage(error, "Offline OCR failed. Try selecting a clearer, larger text region.")
-    });
+    console.error("[RavenEye] Activation failed:", error);
+    return { success: false, error: getErrorMessage(error, "Failed to start capture.") };
   }
 }
 
@@ -247,8 +322,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     activateCapture().then(sendResponse);
     return true;
   }
+
+  if (message.action === "FALLBACK_CAPTURE") {
+    getActiveTab()
+      .then((tab) => startFallbackCapture(tab))
+      .then(sendResponse);
+    return true;
+  }
+
+  if (message.action === "GET_PENDING_CAPTURE") {
+    sendResponse({ success: true, dataUrl: latestPendingCapture?.dataUrl || null });
+    return false;
+  }
+
+  if (message.action === "CLOSE_TAB") {
+    if (sender?.tab && typeof sender.tab.id === "number") {
+      chrome.tabs.remove(sender.tab.id);
+    }
+    return false;
+  }
+
   if (message.action === "CAPTURE_REGION") {
-    chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: "png", quality: 100 }, (dataUrl) => {
+    chrome.tabs.captureVisibleTab(sender?.tab?.windowId, { format: "png", quality: 100 }, (dataUrl) => {
       if (chrome.runtime.lastError) {
         sendResponse({ success: false, error: chrome.runtime.lastError.message });
         return;
@@ -257,14 +352,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+
   if (message.action === "RUN_OCR") {
-    if (chrome.offscreen?.createDocument && chrome.runtime.getContexts) {
-      handleChromiumOCR(message.dataUrl, sendResponse);
-      return true;
-    }
-    handleOCR(message.dataUrl, sendResponse);
+    handleChromiumOCR(message.dataUrl, sendResponse);
     return true;
   }
+
   if (message.action === "SAVE_IMAGE") {
     chrome.downloads.download({
       url: message.dataUrl,
@@ -272,5 +365,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       saveAs: false
     });
     sendResponse({ success: true });
+    return false;
   }
 });
+

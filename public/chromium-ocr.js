@@ -1,10 +1,11 @@
-let workerPromise;
+// RavenEye Chromium Offscreen OCR Engine
+let workerPromise = null;
 const requests = new Map();
 
 function errorMessage(error) {
   if (typeof error === "string" && error.trim()) return error;
   if (error && typeof error.message === "string" && error.message.trim()) return error.message;
-  return "Chromium offline OCR worker failed to start.";
+  return "Chromium offline OCR worker failed to process image.";
 }
 
 function getWorker() {
@@ -12,7 +13,7 @@ function getWorker() {
     workerPromise = Tesseract.createWorker("eng", 1, {
       workerPath: chrome.runtime.getURL("tesseract-worker.min.js"),
       corePath: chrome.runtime.getURL("tesseract-core.wasm.js"),
-      langPath: chrome.runtime.getURL("tessdata"),
+      langPath: `${chrome.runtime.getURL("tessdata")}/`,
       workerBlobURL: false
     }).then(async (worker) => {
       await worker.setParameters({
@@ -28,8 +29,17 @@ function getWorker() {
   return workerPromise;
 }
 
+// Pre-warm the OCR worker as soon as the offscreen document is created
+try {
+  getWorker().catch((err) => {
+    console.warn("[RavenEye Offscreen] Pre-warm notice:", err);
+  });
+} catch (e) {
+  // Ignored during initial bootstrap
+}
+
 function runOcr(message, sendResponse) {
-  const requestId = message.requestId || `legacy-${Date.now()}`;
+  const requestId = message.requestId || `ocr-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   if (requests.has(requestId)) {
     requests.get(requestId).then(sendResponse);
     return true;
@@ -37,11 +47,20 @@ function runOcr(message, sendResponse) {
 
   const resultPromise = getWorker()
     .then((worker) => worker.recognize(message.dataUrl))
-    .then((result) => ({ success: true, text: result.data.text.trim() }))
-    .catch((error) => ({
-      success: false,
-      error: `Chromium offline OCR failed: ${errorMessage(error)}`
-    }));
+    .then((result) => ({
+      success: true,
+      text: (result?.data?.text || "").trim()
+    }))
+    .catch((error) => {
+      console.error("[RavenEye Offscreen] OCR recognition error:", error);
+      // Reset workerPromise so subsequent attempts can reinitialize if worker crashed
+      workerPromise = null;
+      return {
+        success: false,
+        error: `Chromium offline OCR failed: ${errorMessage(error)}`
+      };
+    });
+
   requests.set(requestId, resultPromise);
   resultPromise.then((response) => {
     requests.delete(requestId);
@@ -51,10 +70,20 @@ function runOcr(message, sendResponse) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.target !== "raveneye-offscreen" || message.action !== "RUN_OFFSCREEN_OCR") {
+  if (message.target !== "raveneye-offscreen") {
     return false;
   }
-  return runOcr(message, sendResponse);
+
+  if (message.action === "PING") {
+    sendResponse({ success: true, ready: true });
+    return false;
+  }
+
+  if (message.action === "RUN_OFFSCREEN_OCR") {
+    return runOcr(message, sendResponse);
+  }
+
+  return false;
 });
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -64,3 +93,4 @@ chrome.runtime.onConnect.addListener((port) => {
     runOcr(message, (response) => port.postMessage(response));
   });
 });
+
